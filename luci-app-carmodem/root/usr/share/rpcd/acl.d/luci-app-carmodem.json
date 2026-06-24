@@ -1,0 +1,15 @@
+{
+  "luci-app-carmodem": {
+    "description": "Access to CarModem modem monitoring and control",
+    "read": {
+      "ubus": {
+        "carmodem": [ "get_status", "get_conn", "get_conn_log", "get_telemetry", "get_neighbours", "get_signal", "get_location", "scan_operators", "get_bands", "get_sms", "get_sms_storage", "get_sms_storage_fill" ]
+      }
+    },
+    "write": {
+      "ubus": {
+        "carmodem": [ "set_band", "set_rat", "set_sim", "set_ttl", "dial", "send_at", "send_ussd", "ussd_respond", "ussd_cancel", "send_sms", "delete_sms", "set_sms_storage", "reset_modem" ]
+      }
+    }
+  }
+}

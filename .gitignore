@@ -1,0 +1,12 @@
+*.pyc
+__pycache__/
+*.ipk
+*.apk
+/build/*.log
+/build/apk-manifest.txt
+.DS_Store
+~$*
+# ключи подписи — НЕ публиковать
+/build/feed-key/
+*.key
+private-key.pem

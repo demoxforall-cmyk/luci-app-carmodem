@@ -1,0 +1,119 @@
+#!/bin/sh
+# rpcd backend for CarModem
+# SPDX-License-Identifier: GPL-2.0
+# Источник каждого поля см. docs/sources_MM_vs_AT.md
+# MM-поля: mmcli; глубокие метрики (по-антенные, CA, TA, темп., NR band-lock): AT через cm_at.
+. /usr/share/libubox/jshn.sh
+
+CM_SHARE="${CM_SHARE:-/usr/share/carmodem}"
+. "$CM_SHARE/at.sh"
+. "$CM_SHARE/telemetry.sh"
+. "$CM_SHARE/mm.sh"
+. "$CM_SHARE/control.sh"
+
+case "$1" in
+  list)
+    cat <<JSON
+{ "get_status":{}, "get_conn":{}, "get_conn_log":{}, "get_telemetry":{}, "get_neighbours":{}, "get_signal":{},
+  "get_location":{}, "get_sms":{}, "get_sms_storage":{}, "get_sms_storage_fill":{},
+  "scan_operators":{}, "get_bands":{}, "set_band":{"bands":""}, "set_rat":{"mode":""},
+  "set_sim":{"slot":0}, "set_ttl":{"in":0,"out":0}, "dial":{"up":true},
+  "send_at":{"cmd":""}, "send_ussd":{"code":""}, "ussd_respond":{"response":""}, "ussd_cancel":{},
+  "send_sms":{"to":"","text":""}, "delete_sms":{"ids":""},
+  "set_sms_storage":{"storage":""}, "reset_modem":{} }
+JSON
+    ;;
+  call)
+    case "$2" in
+      get_status)
+        # Идентификация/регистрация/оператор/сессия — MM
+        cm_mm_status ;;
+      get_conn)
+        # Лёгкое состояние модема для живого бейджа Connection (~1 c)
+        cm_mm_conn ;;
+      get_conn_log)
+        # Живой журнал дозвона (ModemManager/netifd/wwan) для фрейма-лога
+        cm_conn_log ;;
+      get_signal)
+        # RSRP/RSRQ/RSSI/SINR (агрегированный) — MM --signal-get
+        cm_mm_signal ;;
+      get_neighbours)
+        # Соседние соты (PCI/EARFCN/RSRP/RSRQ, PCI в hex) — MM --get-cell-info
+        # ubus не принимает массив верхнего уровня -> оборачиваем в объект
+        printf '{"cells":%s}\n' "$(cm_mm_neighbours)" ;;
+      get_location)
+        # Cell ID / TAC / LAC (hex) — MM location-3gpp
+        cm_mm_location ;;
+      get_telemetry)
+        # Глубокие метрики — AT через cm_at (по-антенные/CA/TA/темп.)
+        cm_telemetry_at ;;
+      get_sms)
+        # Входящие SMS — MM messaging (ТЗ FR-31)
+        printf '{"messages":%s}\n' "$(cm_mm_sms_list)" ;;
+      get_sms_storage)
+        # Текущее хранилище SMS (AT+CPMS): sm (SIM) / me (модем) / mt (combined)
+        cm_sms_storage_get ;;
+      get_sms_storage_fill)
+        # Счётчики заполнения SIM и модема (для индикаторов)
+        cm_sms_storage_fill ;;
+      send_at)
+        # Ручная AT-консоль (ТЗ FR-10) — через сериализованный cm_at
+        read -r input
+        json_load "$input"
+        json_get_var cmd cmd
+        cmd=$(cm_sanitize_at "$cmd") || { echo '{"error":"unsafe_at"}'; exit 0; }
+        out=$(cm_at "$cmd" 2>&1)
+        json_init
+        json_add_string raw "$out"
+        json_dump ;;
+      send_ussd)
+        # инициировать USSD-сессию (*100# и т.п.)
+        read -r input; json_load "$input"; json_get_var code code
+        code=$(cm_sanitize_ussd "$code") || { echo '{"error":"bad_ussd"}'; exit 0; }
+        out=$(mmcli -m "${CM_MM_INDEX:-0}" --3gpp-ussd-initiate="$code" 2>&1)
+        json_init; json_add_string raw "$out"; json_dump ;;
+      ussd_respond)
+        # ответ на интерактивное USSD-меню сети
+        read -r input; json_load "$input"; json_get_var response response
+        response=$(cm_sanitize_ussd "$response") || { echo '{"error":"bad_ussd"}'; exit 0; }
+        out=$(mmcli -m "${CM_MM_INDEX:-0}" --3gpp-ussd-respond="$response" 2>&1)
+        json_init; json_add_string raw "$out"; json_dump ;;
+      ussd_cancel)
+        mmcli -m "${CM_MM_INDEX:-0}" --3gpp-ussd-cancel >/dev/null 2>&1
+        json_init; json_add_boolean ok 1; json_dump ;;
+      send_sms)
+        read -r input; json_load "$input"
+        json_get_var to to; json_get_var text text
+        midx="${CM_MM_INDEX:-0}"
+        # 1) создать SMS-объект (MM сам кодирует UCS2/собирает длинные, FR-31)
+        created=$(mmcli -m "$midx" --messaging-create-sms="number='$to',text='$text'" 2>&1)
+        sid=$(printf '%s\n' "$created" | sed -n 's#.*/SMS/\([0-9][0-9]*\).*#\1#p' | head -1)
+        json_init
+        if [ -z "$sid" ]; then
+            json_add_string error "create_failed"; json_add_string raw "$created"
+        else
+            # 2) ОТПРАВИТЬ созданное — без этого SMS просто лежит в памяти, не уходит.
+            # Успех определяем по коду возврата mmcli (надёжнее текста).
+            sent=$(mmcli -s "$sid" --send 2>&1); rc=$?
+            if [ "$rc" -eq 0 ]; then
+                # mmcli не проставляет timestamp у отправленных (submit) -> запоминаем
+                # время отправки по id, чтобы показать его в треде (cm_mm_sms_list)
+                echo "$sid $(date '+%Y-%m-%dT%H:%M:%S')" >> /tmp/cm_sms_send_times 2>/dev/null
+                json_add_boolean ok 1
+            else
+                json_add_string error "send_failed"; json_add_string raw "$sent"
+            fi
+        fi
+        json_dump ;;
+      scan_operators) cm_scan_operators ;;
+      get_bands) cm_get_bands ;;
+      set_band) read -r input; json_load "$input"; json_get_var bands bands; cm_set_band "$bands" ;;
+      set_rat)  read -r input; json_load "$input"; json_get_var mode mode;  cm_set_rat "$mode" ;;
+      dial)     read -r input; json_load "$input"; json_get_var up up;      cm_dial "$up" ;;
+      delete_sms) read -r input; json_load "$input"; json_get_var ids ids; cm_mm_sms_delete "$ids" ;;
+      set_sms_storage) read -r input; json_load "$input"; json_get_var storage storage; cm_sms_storage_set "$storage" ;;
+      reset_modem) cm_reset_modem ;;
+      *) echo '{"error":"not_implemented"}' ;;
+    esac
+    ;;
+esac

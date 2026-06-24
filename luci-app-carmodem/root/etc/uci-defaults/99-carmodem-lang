@@ -1,0 +1,6 @@
+#!/bin/sh
+# Регистрируем русский в списке языков LuCI (System -> Language), т.к. перевод
+# carmodem.ru.lmo вшит в этот пакет, а не в отдельный luci-i18n-carmodem-ru.
+uci -q get luci.languages.ru >/dev/null 2>&1 || uci set luci.languages.ru='Русский (Russian)'
+uci commit luci
+exit 0

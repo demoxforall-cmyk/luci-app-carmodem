@@ -1,0 +1,418 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: luci-app-carmodem\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+msgid "(no response)"
+msgstr "(нет ответа)"
+
+msgid "5G NR band-lock"
+msgstr "5G NR: блокировка диапазонов"
+
+msgid "AT console"
+msgstr "AT-консоль"
+
+msgid "AT+CEREG? — network registration"
+msgstr "AT+CEREG? — регистрация в сети"
+
+msgid "AT+CFUN=1,1 — reboot modem (apply changes)"
+msgstr "AT+CFUN=1,1 — перезагрузить модем (применить изменения)"
+
+msgid "AT+CFUN? — modem mode"
+msgstr "AT+CFUN? — режим модема"
+
+msgid "AT+CGDCONT? — PDP contexts / APN"
+msgstr "AT+CGDCONT? — PDP-контексты / APN"
+
+msgid "AT+COPS? — current operator"
+msgstr "AT+COPS? — текущий оператор"
+
+msgid "AT+CPIN? — SIM / PIN status"
+msgstr "AT+CPIN? — статус SIM / PIN"
+
+msgid "AT+CSQ — signal level (RSSI)"
+msgstr "AT+CSQ — уровень сигнала (RSSI)"
+
+msgid "AT+QCAINFO — carrier aggregation (CA)"
+msgstr "AT+QCAINFO — агрегация несущих (CA)"
+
+msgid "AT+QCCID — SIM card ICCID"
+msgstr "AT+QCCID — ICCID SIM-карты"
+
+msgid "AT+QCFG=\"data_interface\" — data path: 0 USB / 1 PCIe"
+msgstr "AT+QCFG=\"data_interface\" — канал данных: 0 USB / 1 PCIe"
+
+msgid "AT+QCFG=\"data_interface\",0,0 — data path USB (reboot)"
+msgstr "AT+QCFG=\"data_interface\",0,0 — канал данных USB (ребут)"
+
+msgid "AT+QCFG=\"data_interface\",1,0 — data path PCIe (reboot)"
+msgstr "AT+QCFG=\"data_interface\",1,0 — канал данных PCIe (ребут)"
+
+msgid "AT+QCFG=\"usbnet\" — USB net mode (0 QMI · 1 ECM · 2 MBIM · 3 RNDIS · 5 NCM)"
+msgstr "AT+QCFG=\"usbnet\" — режим USB-сети (0 QMI · 1 ECM · 2 MBIM · 3 RNDIS · 5 NCM)"
+
+msgid "AT+QCFG=\"usbnet\",0 — switch to QMI/RMNET (reboot)"
+msgstr "AT+QCFG=\"usbnet\",0 — переключить на QMI/RMNET (ребут)"
+
+msgid "AT+QCFG=\"usbnet\",1 — switch to ECM (reboot)"
+msgstr "AT+QCFG=\"usbnet\",1 — переключить на ECM (ребут)"
+
+msgid "AT+QCFG=\"usbnet\",2 — switch to MBIM (reboot)"
+msgstr "AT+QCFG=\"usbnet\",2 — переключить на MBIM (ребут)"
+
+msgid "AT+QCFG=\"usbnet\",3 — switch to RNDIS (reboot)"
+msgstr "AT+QCFG=\"usbnet\",3 — переключить на RNDIS (ребут)"
+
+msgid "AT+QENG=\"servingcell\" — serving cell"
+msgstr "AT+QENG=\"servingcell\" — ведущая сота"
+
+msgid "AT+QNWINFO — network: tech / band / channel"
+msgstr "AT+QNWINFO — сеть: технология / band / канал"
+
+msgid "AT+QNWPREFCFG=\"lte_band\" — allowed LTE bands"
+msgstr "AT+QNWPREFCFG=\"lte_band\" — разрешённые LTE band"
+
+msgid "AT+QNWPREFCFG=\"mode_pref\" — preferred RAT"
+msgstr "AT+QNWPREFCFG=\"mode_pref\" — предпочтительный RAT"
+
+msgid "AT+QNWPREFCFG=\"nr5g_band\" — allowed NR bands"
+msgstr "AT+QNWPREFCFG=\"nr5g_band\" — разрешённые NR band"
+
+msgid "AT+QRSRP — RSRP per antenna"
+msgstr "AT+QRSRP — RSRP по антеннам"
+
+msgid "AT+QRSRQ — RSRQ per antenna"
+msgstr "AT+QRSRQ — RSRQ по антеннам"
+
+msgid "AT+QSINR — SINR per antenna"
+msgstr "AT+QSINR — SINR по антеннам"
+
+msgid "AT+QTEMP — modem temperature"
+msgstr "AT+QTEMP — температура модема"
+
+msgid "AT+QUIMSLOT? — active SIM slot"
+msgstr "AT+QUIMSLOT? — активный слот SIM"
+
+msgid "ATI — model and firmware"
+msgstr "ATI — модель и прошивка"
+
+msgid "Advanced settings"
+msgstr "Расширенные настройки"
+
+msgid "All"
+msgstr "Все"
+
+msgid "Apply RAT"
+msgstr "Применить RAT"
+
+msgid "Auto (all)"
+msgstr "Авто (все)"
+
+msgid "Band"
+msgstr "Диапазон"
+
+msgid "Cancel USSD"
+msgstr "Отменить USSD"
+
+msgid "Carrier aggregation"
+msgstr "Агрегация несущих"
+
+msgid "Cell on map"
+msgstr "Сота на карте"
+
+msgid "Cell parameters"
+msgstr "Параметры соты"
+
+msgid "Combined"
+msgstr "Совмещённое"
+
+msgid "Connect"
+msgstr "Подключить"
+
+msgid "Connected"
+msgstr "Подключено"
+
+msgid "Connection"
+msgstr "Соединение"
+
+msgid "Copy to clipboard"
+msgstr "Копировать в буфер"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Delete entire conversation"
+msgstr "Удалить всю переписку"
+
+msgid "Delete failed"
+msgstr "Не удалось удалить"
+
+msgid "Device info"
+msgstr "Об устройстве"
+
+msgid "Dial log"
+msgstr "Журнал дозвона"
+
+msgid "Disable all"
+msgstr "Снять все"
+
+msgid "Disconnect"
+msgstr "Отключить"
+
+msgid "Done"
+msgstr "Готово"
+
+msgid "EARFCN — E-UTRA absolute radio-frequency channel number (LTE carrier). Uniquely defines the frequency and band."
+msgstr "EARFCN — номер частотного канала E-UTRA (несущая LTE). Однозначно задаёт частоту и диапазон."
+
+msgid "Enable all"
+msgstr "Выбрать все"
+
+msgid "Error"
+msgstr "Ошибка"
+
+msgid "Failed"
+msgstr "Не удалось"
+
+msgid "Firmware"
+msgstr "Прошивка"
+
+msgid "Gateway"
+msgstr "Шлюз"
+
+msgid "Global Cell ID"
+msgstr "Глобальный Cell ID"
+
+msgid "Hardware revision"
+msgstr "Ревизия оборудования"
+
+msgid "LTE band-lock"
+msgstr "LTE: блокировка диапазонов"
+
+msgid "Message"
+msgstr "Сообщение"
+
+msgid "Messages"
+msgstr "Сообщения"
+
+msgid "Model"
+msgstr "Модель"
+
+msgid "Modem"
+msgstr "Модем"
+
+msgid "Name"
+msgstr "Название"
+
+msgid "Neighbour cells"
+msgstr "Соседние соты"
+
+msgid "New conversation — enter a number above and a message below"
+msgstr "Новая переписка — введите номер сверху и сообщение снизу"
+
+msgid "New message"
+msgstr "Новое сообщение"
+
+msgid "No conversations"
+msgstr "Нет переписок"
+
+msgid "Operator scan"
+msgstr "Поиск операторов"
+
+msgid "PCI — Physical Cell ID, the physical cell identifier (0–503). Helps tell neighbouring sectors apart."
+msgstr "PCI — Physical Cell ID, физический идентификатор соты (0–503). Помогает различать соседние секторы."
+
+msgid "Per-antenna (Rx0–3)"
+msgstr "По антеннам (Rx0–3)"
+
+msgid "Per-antenna measurements: RSRP/RSRQ/SINR values for each receive path (Rx0–Rx3). The spread between antennas shows their balance and polarization."
+msgstr "По-антенные измерения: значения RSRP/RSRQ/SINR для каждого приёмного тракта (Rx0–Rx3). Разброс между антеннами показывает их баланс и поляризацию."
+
+msgid "Phone number"
+msgstr "Номер телефона"
+
+msgid "RAT mode"
+msgstr "Режим RAT"
+
+msgid "RSRP — Reference Signal Received Power. The average power of the cell reference signals, the main indicator of signal strength. Closer to 0 is better. Excellent ≥ −80, poor < −100 dBm."
+msgstr "RSRP — Reference Signal Received Power. Средняя мощность опорных сигналов соты, главный показатель силы сигнала. Ближе к 0 — лучше. Отлично ≥ −80, плохо < −100 dBm."
+
+msgid "RSRQ — Reference Signal Received Quality. Quality of the reference signal (RSRP relative to total power); accounts for interference and cell load. Excellent ≥ −10, poor < −20 dB."
+msgstr "RSRQ — Reference Signal Received Quality. Качество опорного сигнала (RSRP к суммарной мощности), учитывает помехи и загрузку соты. Отлично ≥ −10, плохо < −20 dB."
+
+msgid "RSSI — Received Signal Strength Indicator. Total received signal power, including the useful signal, interference and noise across the whole band."
+msgstr "RSSI — Received Signal Strength Indicator. Суммарная мощность принимаемого сигнала, включая полезный сигнал, помехи и шум всей полосы."
+
+msgid "Receive new SMS into this storage"
+msgstr "Принимать новые SMS в это хранилище"
+
+msgid "Recipient required"
+msgstr "Укажите получателя"
+
+msgid "Registration"
+msgstr "Регистрация"
+
+msgid "Reply to menu"
+msgstr "Ответить в меню"
+
+msgid "Reset modem"
+msgstr "Сброс модема"
+
+msgid "Reset the modem? This drops the connection."
+msgstr "Сбросить модем? Соединение прервётся."
+
+msgid "SIM & TTL"
+msgstr "SIM и TTL"
+
+msgid "SIM slot"
+msgstr "Слот SIM"
+
+msgid "SINR — Signal to Interference plus Noise Ratio. Ratio of useful signal to interference and noise. Determines speed and stability. Excellent ≥ 20, poor < 0 dB."
+msgstr "SINR — Signal to Interference plus Noise Ratio. Отношение полезного сигнала к помехам и шуму. Определяет скорость и стабильность. Отлично ≥ 20, плохо < 0 dB."
+
+msgid "Save & apply"
+msgstr "Сохранить и применить"
+
+msgid "Save & apply band-lock? Connection may drop briefly."
+msgstr "Сохранить и применить блокировку диапазонов? Соединение может ненадолго прерваться."
+
+msgid "Scan networks"
+msgstr "Искать сети"
+
+msgid "Scan takes 1–2 min and briefly affects the connection."
+msgstr "Поиск занимает 1–2 мин и кратко влияет на соединение."
+
+msgid "Select & delete"
+msgstr "Выбрать и удалить"
+
+msgid "Select a conversation"
+msgstr "Выберите переписку"
+
+msgid "Send"
+msgstr "Отправить"
+
+msgid "Send a service code, e.g. *100#"
+msgstr "Отправьте сервисный код, напр. *100#"
+
+msgid "Send failed"
+msgstr "Не удалось отправить"
+
+msgid "Service codes"
+msgstr "Сервисные коды"
+
+msgid "Serving cell — the cell the modem is currently connected to. Marked with a star."
+msgstr "Ведущая (serving) сота — та, к которой модем сейчас подключён. Отмечена звездой."
+
+msgid "Session cancelled"
+msgstr "Сессия отменена"
+
+msgid "Session time"
+msgstr "Время сессии"
+
+msgid "Set"
+msgstr "Задать"
+
+msgid "Signal"
+msgstr "Сигнал"
+
+msgid "Signal quality"
+msgstr "Качество сигнала"
+
+msgid "Signal strength"
+msgstr "Сила сигнала"
+
+msgid "Signal strength — an overall connection quality estimate in percent (per modem data)."
+msgstr "Сила сигнала — обобщённая оценка качества соединения в процентах (по данным модема)."
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "TTL in / out"
+msgstr "TTL вход / выход"
+
+msgid "TX power"
+msgstr "Мощность TX"
+
+msgid "TX power — modem transmitter power (uplink). Appears only during active transmission; unavailable when idle (RRC idle)."
+msgstr "TX power — мощность передатчика модема (uplink). Появляется только при активной передаче; в простое (RRC idle) недоступна."
+
+msgid "Tech"
+msgstr "Технология"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "To"
+msgstr "Кому"
+
+msgid "Today"
+msgstr "Сегодня"
+
+msgid "Traffic ↓ / ↑"
+msgstr "Трафик ↓ / ↑"
+
+msgid "Type"
+msgstr "Тип"
+
+msgid "Yesterday"
+msgstr "Вчера"
+
+msgid "current"
+msgstr "текущая"
+
+msgid "disconnected"
+msgstr "отключено"
+
+msgid "eNB / Sector"
+msgstr "eNB / Сектор"
+
+msgid "in"
+msgstr "вход"
+
+msgid "live"
+msgstr "онлайн"
+
+msgid "messages"
+msgstr "сообщений"
+
+msgid "no data"
+msgstr "нет данных"
+
+msgid "no neighbours reported"
+msgstr "соседние соты не сообщены"
+
+msgid "no networks"
+msgstr "сети не найдены"
+
+msgid "open 4cells"
+msgstr "открыть 4cells"
+
+msgid "out"
+msgstr "выход"
+
+msgid "press scan"
+msgstr "нажмите «Искать»"
+
+msgid "scanning…"
+msgstr "идёт поиск…"
+
+msgid "selected"
+msgstr "выбрано"
+
+msgid "session active"
+msgstr "сессия активна"
+
+msgid "— modem console — pick a command above or type your own —"
+msgstr "— консоль модема — выберите команду сверху или введите свою —"
+
+msgid "— pick a command —"
+msgstr "— выберите команду —"
+
+msgid "— waiting for connection log… —"
+msgstr "— ожидание журнала дозвона… —"
+
+msgid "Advanced"
+msgstr "Дополнительно"

@@ -1,0 +1,36 @@
+#!/bin/sh /etc/rc.common
+# CarModem — служба инициализации
+# SPDX-License-Identifier: GPL-2.0
+#
+# Сериализация AT (ТЗ NFR-2) реализована на уровне cm_at через flock на порт
+# (at.sh) — отдельный персистентный демон не требуется, все потребители делят
+# один lock и доступ к ttyUSB строго последователен.
+#
+# Эта служба готовит окружение:
+#  - включает периодический сбор сигнала в ModemManager (--signal-setup),
+#    иначе `--signal-get` возвращает пусто;
+#  - создаёт каталог lock для cm_at.
+
+START=95
+STOP=10
+USE_PROCD=1
+
+MM_INDEX=0
+SIGNAL_RATE=5   # сек; MM сам опрашивает сигнал, бэкенд только читает
+
+start_service() {
+    mkdir -p /var/lock
+    # включить опрос сигнала в MM (идемпотентно)
+    command -v mmcli >/dev/null 2>&1 && \
+        mmcli -m "$MM_INDEX" --signal-setup="$SIGNAL_RATE" >/dev/null 2>&1
+
+    # procd-«заглушка»: служба считается запущенной (одноразовая настройка).
+    procd_open_instance
+    procd_set_param command /bin/true
+    procd_close_instance
+}
+
+stop_service() {
+    command -v mmcli >/dev/null 2>&1 && \
+        mmcli -m "$MM_INDEX" --signal-setup=0 >/dev/null 2>&1
+}

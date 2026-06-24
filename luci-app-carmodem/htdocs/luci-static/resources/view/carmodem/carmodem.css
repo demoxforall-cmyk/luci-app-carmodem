@@ -1,0 +1,362 @@
+/* CarModem — оформление (desktop-first). Цвета привязаны к СИСТЕМНОЙ теме LuCI:
+   поверхности и приглушённый текст строятся от currentColor (наследуемого цвета
+   текста темы) — автоматически адаптируются к светлой/тёмной теме (NFR-4).
+   Семантические цвета качества (зелёный…красный) одинаковы в любой теме. */
+/* SPDX-License-Identifier: GPL-2.0 */
+
+/* Цвета качества сигнала (раздел 7 ТЗ) — фиксированные, читаемы на обеих темах */
+.cm-q1 { --cm-c: #1e9e4a; } /* отлично */
+.cm-q2 { --cm-c: #7cb342; } /* хорошо  */
+.cm-q3 { --cm-c: #f9a825; } /* средне  */
+.cm-q4 { --cm-c: #e53935; } /* плохо   */
+.cm-na { --cm-c: color-mix(in srgb, currentColor 45%, transparent); } /* N/A */
+
+.cm-metric { color: var(--cm-c, inherit); font-weight: 400; }
+
+/* Ведущая строка таблицы (★ PCC / serving) — подсветка цветом качества */
+.cm-table tr.cm-primary { background: color-mix(in srgb, var(--cm-c, currentColor) 14%, transparent); }
+.cm-table tr.cm-primary td { font-weight: 500; }
+
+/* Сетка карточек дашборда: 6 колонок, карточки задают span (c2=ряд из трёх,
+   c3=ряд из двух, wide=во всю ширину) */
+.cm-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 14px;
+	align-items: stretch;
+	/* нейтральный серый для меток (не тонируется темой) + чистый шрифт */
+	--cm-muted: #6b7280;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { .cm-grid { --cm-muted: #99a0ab; } }
+.cm-card.cm-c2 { grid-column: span 2; }
+.cm-card.cm-c3 { grid-column: span 3; }
+.cm-card {
+	border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+	border-radius: 10px;
+	padding: 14px 16px;
+	background: color-mix(in srgb, currentColor 5%, transparent);
+}
+.cm-card h3 {
+	margin: 0 0 10px;
+	font-size: 15px;
+	display: flex; align-items: center; gap: 8px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+.cm-card.cm-wide { grid-column: 1 / -1; }
+
+/* Пары ключ-значение. min-width:0 + overflow-wrap — длинные значения (firmware,
+   ICCID) переносятся внутри блока, а не вылезают за границы. */
+.cm-kv { display: grid; grid-template-columns: minmax(88px, 40%) 1fr; gap: 4px 12px; }
+/* font-weight/style/transform заданы ЯВНО: тема LuCI делает dt жирным
+   (dt{font-weight:700}) — без явного веса метки рассогласуются с th таблиц. */
+.cm-kv dt { color: var(--cm-muted); font-size: 13px; font-weight: 400; font-style: normal; text-transform: none; min-width: 0; }
+.cm-kv dd { margin: 0; font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+/* поле управления: метка сверху, контролы в один ряд (SIM & TTL и т.п.) */
+.cm-field { margin: 12px 0 0; }
+.cm-field-lbl { display: block; font-size: 12px; color: var(--cm-muted); margin: 0 0 4px; }
+.cm-field-ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cm-field-ctl input, .cm-field-ctl select { margin: 0; }
+.cm-field-ctl .cm-sep { opacity: .5; }
+
+/* Сводка скорости (Internet Status) — пилюли */
+.cm-statbar { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 14px; }
+.cm-statbar .cm-pill {
+	padding: 4px 10px; border-radius: 999px; font-size: 13px;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+/* Таблицы (соседи, CA, по-антенные) */
+.cm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cm-table th, .cm-table td { padding: 6px 8px; text-align: left; border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
+.cm-table th { color: var(--cm-muted); font-size: 13px; font-weight: 400; font-style: normal; text-transform: none; }
+/* CA ↔ Neighbour cells: только ★-столбец фиксируем узким (30px), ВСЕ столбцы
+   данных (Type и далее) делят ширину поровну -> равные промежутки между ними;
+   Type начинается с одной позиции в обеих таблицах (после 30px ★). */
+.cm-celltbl { table-layout: fixed; }
+.cm-celltbl th:first-child, .cm-celltbl td:first-child { width: 30px; text-align: center; }
+.cm-celltbl td { overflow: hidden; text-overflow: ellipsis; }
+
+/* Подсказки: имена параметров с title — курсор help + пунктир */
+.cm-mname[title], .cm-table th[title], .cm-strength-label[title] {
+	cursor: help;
+	text-decoration: underline dotted;
+	text-underline-offset: 3px;
+	text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+/* Качество сигнала: крупный % силы + цветные бары (FR-15) */
+.cm-signal { display: flex; flex-direction: column; gap: 2px; }
+.cm-strength { margin-bottom: 10px; }
+.cm-strength-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.cm-strength-label { font-size: 13px; color: var(--cm-muted); }
+.cm-strength-val { font-size: 34px; font-weight: 800; line-height: 1; color: var(--cm-c, inherit); }
+
+.cm-mrow {
+	display: grid;
+	grid-template-columns: 56px 92px 42px 1fr;
+	align-items: center; gap: 10px; padding: 5px 0;
+}
+.cm-mrow-plain { grid-template-columns: 56px 1fr; }
+.cm-mname { font-size: 13px; color: var(--cm-muted); }
+.cm-mval  { font-weight: 400; font-size: 14px; color: var(--cm-c, inherit); }
+.cm-mpct  { font-size: 12px; color: var(--cm-muted); text-align: right; }
+
+.cm-bar { height: 8px; border-radius: 6px; background: color-mix(in srgb, currentColor 14%, transparent); overflow: hidden; }
+.cm-bar-lg { height: 14px; }
+.cm-bar-fill { height: 100%; border-radius: 6px; background: var(--cm-c, #1e9e4a); transition: width .4s ease; }
+
+/* Кнопка «скопировать» рядом со значением */
+.cm-copyfield { display: inline-flex; align-items: center; gap: 8px; }
+.cm-copy {
+	border: none; background: transparent; cursor: pointer; line-height: 1;
+	color: var(--cm-muted); font-size: 14px;
+	padding: 1px 5px; border-radius: 4px;
+}
+.cm-copy:hover { color: inherit; background: color-mix(in srgb, currentColor 14%, transparent); }
+.cm-copy.cm-copied { color: #1e9e4a; }
+
+/* Иконки в заголовках карточек (инлайн-SVG, наследуют размер/цвет) */
+.cm-ico { display: inline-flex; align-items: center; }
+.cm-ico svg { display: block; }
+.cm-card h3 .cm-ico { flex: 0 0 auto; }
+
+/* Пилюли-бейджи */
+.cm-pill2 { display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 6px; line-height: 1.5; }
+.cm-pill-plain  { background: color-mix(in srgb, currentColor 11%, transparent); }
+.cm-pill-accent { background: color-mix(in srgb, #378add 20%, transparent); color: #1f5fa5; }
+.cm-pill-q1 { background: color-mix(in srgb, #1e9e4a 22%, transparent); }
+.cm-pill-q3 { background: color-mix(in srgb, #f9a825 24%, transparent); }
+.cm-pill-q4 { background: color-mix(in srgb, #e53935 22%, transparent); }
+
+/* HERO-строка: оператор + статус + трафик + сила сигнала */
+.cm-hero { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; }
+.cm-hero h3 { display: none; }
+.cm-hero-op { display: flex; align-items: center; gap: 10px; }
+.cm-hero-name { font-size: 21px; font-weight: 600; }
+.cm-hero-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; font-size: 13px; color: var(--cm-muted); }
+.cm-hero-meta .cm-up { color: #1e9e4a; }
+.cm-hero-meta .cm-dn { color: #378add; }
+.cm-hero-r { min-width: 190px; }
+.cm-hero-rsrp { font-size: 13px; color: var(--cm-muted); }
+
+/* Бейдж соединения с пульсом */
+.cm-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 3px 11px; border-radius: 999px; }
+.cm-badge.cm-on  { color: #0d7a37; background: color-mix(in srgb, #1e9e4a 24%, transparent); }
+.cm-badge.cm-off { color: #b3271e; background: color-mix(in srgb, #e53935 22%, transparent); }
+.cm-badge.cm-on .cm-dot  { background: #1e9e4a; }
+.cm-badge.cm-off .cm-dot { background: #e53935; }
+.cm-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.cm-pulse { animation: cm-pulse 1.4s ease-in-out infinite; }
+@keyframes cm-pulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* Сила сигнала в hero: % + горизонтальный бар, под ним бенды CA пилюлями */
+.cm-hero-r { min-width: 220px; }
+.cm-herosig-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.cm-herosig-lbl { font-size: 13px; color: var(--cm-muted); }
+.cm-herosig-val { font-size: 28px; font-weight: 700; line-height: 1; color: var(--cm-c, inherit); }
+.cm-herosig-sub { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin-top: 9px; }
+
+/* Полоски-«антенна» */
+.cm-sbars { display: inline-flex; align-items: flex-end; gap: 3px; height: 28px; }
+.cm-sbar { width: 6px; border-radius: 1px; background: color-mix(in srgb, currentColor 22%, transparent); }
+.cm-sbar:nth-child(1) { height: 35%; }
+.cm-sbar:nth-child(2) { height: 52%; }
+.cm-sbar:nth-child(3) { height: 69%; }
+.cm-sbar:nth-child(4) { height: 86%; }
+.cm-sbar:nth-child(5) { height: 100%; }
+.cm-sbar.cm-on { background: var(--cm-c, #1e9e4a); }
+
+/* Ссылка на карту */
+.cm-maplink { display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
+
+/* ===== Messages (мессенджер SMS/USSD) — цвета на currentColor/акценте,
+   адаптируются к ЛЮБОЙ теме LuCI (её dark-режим не отражается в prefers-color-
+   scheme, поэтому фиксированные светлые цвета НЕ используем) ===== */
+.cm-msg { padding: 0; overflow: hidden; }
+.cm-msg-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; flex-wrap: wrap; }
+.cm-msg-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 500; }
+.cm-msg-title .cm-ico { color: #4a90d9; }
+
+/* сегмент-переключатель хранилища */
+.cm-seg { display: inline-flex; border: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-radius: 8px; overflow: hidden; }
+.cm-seg-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; font-size: 13px; border: none; background: transparent; color: var(--cm-muted); cursor: pointer; border-left: 1px solid color-mix(in srgb, currentColor 14%, transparent); }
+.cm-seg-btn:first-child { border-left: none; }
+.cm-seg-btn .cm-ico svg { width: 15px; height: 15px; }
+.cm-seg-btn.cm-on { background: color-mix(in srgb, #378add 26%, transparent); color: inherit; font-weight: 500; }
+
+/* полоски заполнения */
+.cm-msg-fill { display: flex; gap: 18px; padding: 7px 14px; border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent); border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent); flex-wrap: wrap; font-size: 12px; color: var(--cm-muted); }
+.cm-fill { display: flex; align-items: center; gap: 7px; }
+.cm-fill .cm-ico svg { width: 14px; height: 14px; }
+.cm-fill-track { display: inline-block; width: 70px; height: 6px; border-radius: 999px; background: color-mix(in srgb, currentColor 16%, transparent); overflow: hidden; }
+.cm-fill-bar { display: block; height: 100%; border-radius: 999px; }
+
+/* две панели */
+.cm-msg-panes { display: grid; grid-template-columns: minmax(0, 34%) minmax(0, 1fr); height: 460px; }
+.cm-msg-list { display: flex; flex-direction: column; border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent); min-width: 0; min-height: 0; }
+.cm-conv-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+
+/* строка диалога */
+.cm-conv { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent); }
+.cm-conv:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+.cm-conv.cm-active { background: color-mix(in srgb, #378add 18%, transparent); }
+.cm-conv-new { border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.cm-conv-ussd { background: color-mix(in srgb, #7c5cff 14%, transparent); border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-bottom: none; }
+.cm-conv-ussd.cm-active { background: color-mix(in srgb, #7c5cff 26%, transparent); }
+.cm-conv-body { min-width: 0; flex: 1; }
+.cm-conv-line { display: flex; justify-content: space-between; gap: 6px; }
+.cm-conv-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cm-conv-time { font-size: 11px; color: var(--cm-muted); flex: 0 0 auto; }
+.cm-conv-prev { font-size: 12px; color: var(--cm-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cm-conv-empty { padding: 16px 12px; color: var(--cm-muted); font-size: 13px; }
+.cm-accent { color: #4a90d9; }
+
+/* аватарка */
+.cm-ava { width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; background: color-mix(in srgb, #378add 22%, transparent); color: #4a90d9; }
+.cm-ava .cm-ico svg { width: 18px; height: 18px; }
+.cm-ava-accent { background: color-mix(in srgb, #378add 24%, transparent); }
+.cm-ava-ussd { background: color-mix(in srgb, #7c5cff 24%, transparent); color: #8b7ff0; }
+/* палитра аватаров по контакту (тема-адаптивно) */
+.cm-ava-c0 { background: color-mix(in srgb, #378add 22%, transparent); color: #4a90d9; }
+.cm-ava-c1 { background: color-mix(in srgb, #1d9e75 24%, transparent); color: #2bb98c; }
+.cm-ava-c2 { background: color-mix(in srgb, #7c5cff 22%, transparent); color: #8b7ff0; }
+.cm-ava-c3 { background: color-mix(in srgb, #e0a52e 26%, transparent); color: #d99a2e; }
+.cm-ava-c4 { background: color-mix(in srgb, #d4537e 22%, transparent); color: #e06a93; }
+.cm-ava-c5 { background: color-mix(in srgb, #639922 24%, transparent); color: #7cb342; }
+
+/* правая панель / тред */
+.cm-msg-right { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.cm-msg-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--cm-muted); font-size: 13px; padding: 20px; }
+.cm-th-head { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.cm-th-head.cm-th-sel { background: color-mix(in srgb, #378add 18%, transparent); }
+.cm-th-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cm-th-sub { font-size: 11px; color: var(--cm-muted); }
+.cm-icon-btn { border: none; background: transparent; cursor: pointer; color: var(--cm-muted); padding: 4px; border-radius: 6px; display: inline-flex; }
+.cm-icon-btn:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+
+/* пузыри (тред — к ВЕРХУ; порядок хронологический, новые ниже) */
+.cm-th-body { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; background: color-mix(in srgb, currentColor 4%, transparent); }
+.cm-bub-row { display: flex; align-items: center; gap: 9px; }
+.cm-bub-row.cm-row-in { justify-content: flex-start; }
+.cm-bub-row.cm-row-out { justify-content: flex-end; }
+.cm-bub-row.cm-selmode { cursor: pointer; padding: 2px 4px; border-radius: 10px; }
+.cm-bub-row.cm-selected { background: color-mix(in srgb, #378add 16%, transparent); }
+.cm-bub { max-width: 76%; padding: 7px 11px; font-size: 13px; }
+.cm-bub-in { background: color-mix(in srgb, currentColor 8%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 13px 13px 13px 4px; }
+.cm-bub-out { background: color-mix(in srgb, #378add 26%, transparent); border-radius: 13px 13px 4px 13px; }
+.cm-bub-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.cm-bub-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 10px; color: var(--cm-muted); }
+.cm-bub-stor { display: inline-flex; align-items: center; gap: 3px; padding: 0 5px; border-radius: 999px; color: inherit; }
+.cm-bub-stor .cm-ico svg { width: 11px; height: 11px; }
+.cm-stor-sm { background: color-mix(in srgb, #e0a52e 26%, transparent); }
+.cm-stor-me { background: color-mix(in srgb, #378add 24%, transparent); }
+.cm-tick { display: inline-flex; color: #4a90d9; }
+.cm-tick .cm-ico svg { width: 13px; height: 13px; }
+/* разделитель дат в треде */
+.cm-date-sep { align-self: center; margin: 4px 0; }
+.cm-date-sep span { font-size: 11px; color: var(--cm-muted); background: color-mix(in srgb, currentColor 10%, transparent); padding: 2px 12px; border-radius: 999px; }
+.cm-sel-circle { width: 21px; height: 21px; flex: 0 0 auto; border-radius: 50%; border: 1.5px solid color-mix(in srgb, currentColor 35%, transparent); display: inline-flex; align-items: center; justify-content: center; }
+.cm-sel-circle.cm-sel-on { background: #2f7fd0; border-color: #2f7fd0; color: #fff; }
+.cm-sel-circle .cm-ico svg { width: 13px; height: 13px; }
+
+/* ввод/действия снизу треда */
+.cm-th-compose { display: flex; align-items: center; gap: 8px; padding: 10px; border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.cm-th-compose input::placeholder { color: color-mix(in srgb, currentColor 34%, transparent); }
+.cm-send-btn { width: 36px; height: 36px; flex: 0 0 auto; border: none; border-radius: 50%; background: color-mix(in srgb, #378add 24%, transparent); color: #4a90d9; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.cm-send-btn:hover { background: color-mix(in srgb, #378add 36%, transparent); }
+.cm-th-foot { padding: 10px 12px; border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.cm-del-all { display: inline-flex; align-items: center; gap: 6px; color: #e0574f; }
+.cm-del-sel { display: inline-flex; align-items: center; gap: 6px; background: color-mix(in srgb, #e2504a 20%, transparent); color: #e0574f; border-color: color-mix(in srgb, #e2504a 34%, transparent); }
+.cm-del-sel.cm-disabled { opacity: .45; pointer-events: none; }
+.cm-newhint { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: auto; color: var(--cm-muted); font-size: 13px; text-align: center; }
+.cm-newhint .cm-ico svg { width: 30px; height: 30px; opacity: .5; }
+.cm-th-newhint { justify-content: center; }
+.cm-th-ussd .cm-ico { color: #8b7ff0; }
+
+/* ===== Advanced panel «Console RF»: приборная панель, моноширинные регистры,
+   LED-чипы диапазонов. Один CSS на обе темы (currentColor/акцент-микс). ===== */
+.cm-adv .cm-card h3 .cm-ico { color: #4a90d9; }
+.cm-adv .cm-band-nr h3 .cm-ico { color: #8b7ff0; }
+.cm-countchip { margin-left: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 400; font-variant-numeric: tabular-nums; padding: 1px 9px; border-radius: 999px; background: color-mix(in srgb, #378add 16%, transparent); color: #4a90d9; }
+.cm-band-nr .cm-countchip { background: color-mix(in srgb, #7c5cff 18%, transparent); color: #8b7ff0; }
+.cm-conn-grid { display: flex; flex-direction: column; gap: 8px; }
+.cm-conn-btn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.cm-conn-btn .cm-ico svg { width: 15px; height: 15px; }
+.cm-conn-status { margin-left: auto; }
+/* шапка карточки с бейджем СНАРУЖИ h3: подчёркивание на обёртке, h3 без рамок,
+   бейдж в обычном текстовом контексте -> .cm-badge (12px) как на Статусе */
+.cm-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); padding-bottom: 8px; margin-bottom: 10px; }
+.cm-card-head h3 { margin: 0; padding: 0; border: none; }
+/* кнопка-переключатель журнала дозвона + сам фрейм лога */
+.cm-logbtn.cm-on { background: color-mix(in srgb, #378add 18%, transparent); border-color: color-mix(in srgb, #378add 45%, transparent); color: #4a90d9; }
+.cm-log-live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--cm-muted); }
+.cm-log-body { max-height: 340px; }
+.cm-btn-ico { display: inline-flex; align-items: center; gap: 6px; }
+.cm-btn-ico .cm-ico svg { width: 15px; height: 15px; }
+.cm-tag { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; padding: 2px 8px; border-radius: 6px; background: color-mix(in srgb, currentColor 10%, transparent); color: var(--cm-muted); }
+.cm-tag-accent { background: color-mix(in srgb, #378add 20%, transparent); color: #4a90d9; }
+.cm-rat-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.cm-pill-sel { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; padding: 3px 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, currentColor 16%, transparent); background: transparent; color: var(--cm-muted); cursor: pointer; transition: all .14s ease; }
+.cm-pill-sel:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+.cm-pill-on { background: color-mix(in srgb, #378add 24%, transparent); border-color: color-mix(in srgb, #378add 50%, transparent); color: #4a90d9; font-weight: 500; }
+.cm-chipwell { background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 8px; padding: 10px; }
+.cm-chipgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 7px; }
+.cm-chip { display: flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 7px; border: 1px solid color-mix(in srgb, currentColor 12%, transparent); background: color-mix(in srgb, currentColor 4%, transparent); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; color: color-mix(in srgb, currentColor 72%, transparent); cursor: pointer; transition: all .14s ease; font-variant-numeric: tabular-nums; }
+.cm-chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+.cm-chip:hover { background: color-mix(in srgb, currentColor 10%, transparent); border-color: color-mix(in srgb, currentColor 28%, transparent); transform: translateY(-1px); }
+.cm-chip-led { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: color-mix(in srgb, currentColor 25%, transparent); transition: all .14s ease; }
+.cm-chip.cm-on { background: color-mix(in srgb, #378add 22%, transparent); border-color: color-mix(in srgb, #378add 55%, transparent); color: currentColor; font-weight: 500; }
+.cm-chip.cm-on .cm-chip-led { background: #378add; box-shadow: 0 0 0 3px color-mix(in srgb, #378add 30%, transparent); }
+.cm-chip input:focus-visible + .cm-chip-led { outline: 2px solid color-mix(in srgb, #378add 60%, transparent); outline-offset: 2px; }
+.cm-band-nr .cm-chip.cm-on { background: color-mix(in srgb, #7c5cff 22%, transparent); border-color: color-mix(in srgb, #7c5cff 55%, transparent); }
+.cm-band-nr .cm-chip.cm-on .cm-chip-led { background: #7c5cff; box-shadow: 0 0 0 3px color-mix(in srgb, #7c5cff 30%, transparent); }
+.cm-band-actions { display: flex; align-items: center; gap: 8px; margin-top: 11px; }
+.cm-field-div { border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent); padding-top: 10px; }
+.cm-note { display: flex; align-items: center; gap: 8px; background: color-mix(in srgb, #f9a825 16%, transparent); font-size: 12.5px; padding: 7px 11px; border-radius: 8px; margin: 0 0 12px; }
+.cm-note .cm-ico { color: #d99a2e; }
+.cm-note .cm-ico svg { width: 16px; height: 16px; }
+.cm-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+.cm-row-current { background: color-mix(in srgb, #378add 12%, transparent); }
+.cm-row-current .cm-ico svg { width: 13px; height: 13px; vertical-align: -2px; }
+.cm-pulse-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4a90d9; margin-right: 7px; vertical-align: middle; animation: cm-pulse 1s ease-in-out infinite; }
+@keyframes cm-pulse { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+/* AT-консоль: реестр команд (тема-адаптивный select) + ЧЁРНЫЙ терминал
+   (намеренно тёмный на обеих темах — как настоящий терминал) */
+.cm-term { background: #0c0e14; border: 1px solid #2a2f3a; border-radius: 8px; overflow: hidden; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.cm-term-log { padding: 10px 12px; max-height: 280px; overflow-y: auto; font-size: 12.5px; line-height: 1.5; color: #d4d4d4; white-space: pre-wrap; word-break: break-word; min-height: 72px; }
+.cm-term-hint { color: #6b7280; }
+.cm-term-cmd { color: #6a9bd8; margin-top: 8px; }
+.cm-term-cmd:first-child { margin-top: 0; }
+.cm-term-out { color: #cfd6e0; }
+.cm-term-err { color: #f48771; }
+.cm-term-line { display: flex; align-items: center; gap: 8px; border-top: 1px solid #2a2f3a; padding: 8px 10px 8px 12px; background: #0a0c11; }
+.cm-term-prompt { color: #57c08a; font-size: 14px; }
+.cm-term-input { flex: 1; min-width: 0; border: none !important; background: transparent !important; box-shadow: none !important; color: #e6e9ef !important; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; outline: none !important; margin: 0 !important; }
+.cm-term-input::placeholder { color: #5b6270; }
+.cm-term-send { display: inline-flex; align-items: center; gap: 6px; border: none; background: #1d4ed8; color: #fff; border-radius: 6px; padding: 6px 13px; font-size: 12.5px; cursor: pointer; flex: 0 0 auto; }
+.cm-term-send:hover { background: #2563eb; }
+.cm-term-send .cm-ico svg { width: 14px; height: 14px; }
+
+/* Адаптив: на узких экранах карточки в один столбец, индикаторы крупнее */
+/* Планшет/узкий десктоп: карточки в один столбец */
+@media (max-width: 1000px) {
+	.cm-grid { grid-template-columns: 1fr; }
+	.cm-card.cm-c2, .cm-card.cm-c3, .cm-card.cm-wide { grid-column: auto; }
+	/* мессенджер: панели в столбец, список ниже */
+	.cm-msg-panes { grid-template-columns: 1fr; height: auto; }
+	.cm-msg-list { border-right: none; border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); max-height: 240px; }
+	.cm-conv-scroll { max-height: 200px; }
+	.cm-msg-right { min-height: 360px; }
+}
+
+/* Мобильный: компактнее */
+@media (max-width: 600px) {
+	.cm-kv { grid-template-columns: 1fr; gap: 2px 0; }
+	.cm-kv dt { margin-top: 6px; }
+	.cm-mrow { grid-template-columns: 1fr auto auto; row-gap: 4px; }
+	.cm-mrow .cm-bar { grid-column: 1 / -1; }
+	.cm-hero-name { font-size: 18px; }
+	.cm-hero-r { min-width: 100%; }
+}
