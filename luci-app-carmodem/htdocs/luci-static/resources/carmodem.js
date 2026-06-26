@@ -10,7 +10,7 @@
 // ресурсы по `?v=<версия_luci>`, которая между нашими сборками не меняется —
 // поэтому браузер не перечитывает обновлённый carmodem.css. Бампить вместе с
 // PKG_VERSION при изменении стилей/вьюх.
-var CM_VER = '3.4';
+var CM_VER = '3.6';
 
 var callGetStatus     = rpc.declare({ object: 'carmodem', method: 'get_status' });
 var callGetConn       = rpc.declare({ object: 'carmodem', method: 'get_conn' });
@@ -24,6 +24,7 @@ var callGetLocation   = rpc.declare({ object: 'carmodem', method: 'get_location'
 var callScanOperators = rpc.declare({ object: 'carmodem', method: 'scan_operators' });
 var callGetBands      = rpc.declare({ object: 'carmodem', method: 'get_bands' });
 var callGetSms        = rpc.declare({ object: 'carmodem', method: 'get_sms', expect: { messages: [] } });
+var callGetSmsSig     = rpc.declare({ object: 'carmodem', method: 'get_sms_sig' });
 var callGetSmsStorage = rpc.declare({ object: 'carmodem', method: 'get_sms_storage' });
 var callSetSmsStorage = rpc.declare({ object: 'carmodem', method: 'set_sms_storage', params: [ 'storage' ] });
 var callGetSmsStorageFill = rpc.declare({ object: 'carmodem', method: 'get_sms_storage_fill' });
@@ -106,7 +107,7 @@ return baseclass.extend({
 		getNeighbours: callGetNeighbours,
 		getLocation: callGetLocation,
 		scanOperators: callScanOperators, getBands: callGetBands,
-		getSms: callGetSms, deleteSms: callDeleteSms,
+		getSms: callGetSms, getSmsSig: callGetSmsSig, deleteSms: callDeleteSms,
 		getSmsStorage: callGetSmsStorage, setSmsStorage: callSetSmsStorage,
 		getSmsStorageFill: callGetSmsStorageFill,
 		sendAt: callSendAt,

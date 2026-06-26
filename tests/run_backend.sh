@@ -26,6 +26,13 @@ check() { # <name> <actual> <needle>
         fail=$((fail+1)); printf '  FAIL %s (нет "%s")\n    got: %s\n' "$1" "$3" "$2"
     fi
 }
+check_absent() { # <name> <actual> <needle> — needle НЕ должен встречаться
+    if printf '%s' "$2" | grep -qF "$3"; then
+        fail=$((fail+1)); printf '  FAIL %s (есть лишнее "%s")\n    got: %s\n' "$1" "$3" "$2"
+    else
+        pass=$((pass+1)); printf '  ok   %s\n' "$1"
+    fi
+}
 
 echo "CarModem backend integration tests"
 echo
@@ -76,10 +83,13 @@ check mm_nb_count2    "$NB" '"earfcn":1602'
 check mm_nb_serving_ci "$NB" '"ci":"1A8D1AB","tac":"2364"'
 
 echo
-echo "[SMS-треды: вход (deliver=in) и исход (submit=out), с id/number/storage/dir]"
-SMS=$(cm_mm_sms_list)
+echo "[SMS-треды: вход из модема (deliver=in); исход — из локального реестра (dir=out)]"
+SMS=$(CM_SMS_SENT="$HERE/fixtures/mm/sent_sms.jsonl" cm_mm_sms_list)
 check sms_in  "$SMS" '{"id":0,"number":"+79162070281","timestamp":"2026-06-21T19:43:17+03","text":"Test 19:43","storage":"me","dir":"in"}'
-check sms_out "$SMS" '"id":1,"number":"+79162070281","timestamp":null,"text":"test","storage":null,"dir":"out"'
+# исходящее берётся ИЗ РЕЕСТРА (а не из submit-копии модема)
+check sms_out_registry "$SMS" '{"id":"s9","number":"+79162070281","timestamp":"2026-06-23T01:43:01","text":"Привет, это исходящее","storage":"me","dir":"out"}'
+# submit-копия модема (id 1) НЕ должна попадать в список — иначе задвоение исходящего
+check_absent sms_no_submit_dup "$SMS" '"id":1,'
 # кириллица: mmcli -K отдаёт октал (\NNN) — должна раскодироваться в UTF-8
 check sms_cyrillic "$SMS" '"text":"Люблб"'
 # валидность JSON всего массива (главный баг: октал-кириллица ломала JSON -> ubus)
@@ -90,6 +100,10 @@ else
     fail=$((fail+1)); echo "  FAIL sms_valid_json — невалидный JSON: $SMS"
 fi
 rm -f "$ROOT/build/_sms.json"
+# дешёвый сигнал изменений SMS (1 вызов mmcli): n=число id (sms_list=1,0,5 -> 3),
+# max=5, out=1 (одна строка в реестре отправленных)
+SIG=$(CM_SMS_SENT="$HERE/fixtures/mm/sent_sms.jsonl" cm_mm_sms_sig)
+check sms_sig "$SIG" '{"n":3,"max":5,"out":1}'
 
 echo
 echo "[синтетический NR-сигнал (по документации; нет 5G-покрытия)]"

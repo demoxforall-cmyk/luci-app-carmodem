@@ -3,12 +3,16 @@
 include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=LuCI app for RM520N modem (CarModem)
-# Зависимости рантайма (попадают в поле depends: метаданных .apk -> при ОНЛАЙН-
-# установке `apk add` apk сам докачивает их из репозитория ImmortalWRT):
-#  luci-proto-modemmanager + modemmanager — бэкенд соединения (ТЗ 3.1).
-LUCI_DEPENDS:=+luci-base +luci-proto-modemmanager +modemmanager
+# Зависимости РАНТАЙМА. ВАЖНО: `+pkg` в LUCI_DEPENDS — это Kconfig select +
+# build-prerequisite, т.е. SDK пытается СОБРАТЬ зависимость. У modemmanager это
+# тянет за собой linux-firmware (сотни МБ) и делает сборку очень долгой.
+# Поэтому модемные пакеты держим в LUCI_EXTRA_DEPENDS (объявлены в depends:
+# метаданных .apk, но НЕ собираются) — `apk add` сам докачает их из репозитория
+# ImmortalWRT. apk-путь требует version-constraint строго в формате "pkg (>=0)".
+LUCI_DEPENDS:=+luci-base
+LUCI_EXTRA_DEPENDS:=luci-proto-modemmanager (>=0), modemmanager (>=0)
 LUCI_PKGARCH:=all
-PKG_VERSION:=3.4
+PKG_VERSION:=3.6
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=CarModem project
 

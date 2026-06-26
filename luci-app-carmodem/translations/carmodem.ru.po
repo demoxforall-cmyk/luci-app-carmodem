@@ -216,6 +216,9 @@ msgstr "Новая переписка — введите номер сверху
 msgid "New message"
 msgstr "Новое сообщение"
 
+msgid "New messages"
+msgstr "Новые сообщения"
+
 msgid "No conversations"
 msgstr "Нет переписок"
 

@@ -227,7 +227,7 @@
 .cm-ava-c5 { background: color-mix(in srgb, #639922 24%, transparent); color: #7cb342; }
 
 /* правая панель / тред */
-.cm-msg-right { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.cm-msg-right { display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
 .cm-msg-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--cm-muted); font-size: 13px; padding: 20px; }
 .cm-th-head { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
 .cm-th-head.cm-th-sel { background: color-mix(in srgb, #378add 18%, transparent); }
@@ -264,6 +264,11 @@
 /* ввод/действия снизу треда */
 .cm-th-compose { display: flex; align-items: center; gap: 8px; padding: 10px; border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
 .cm-th-compose input::placeholder { color: color-mix(in srgb, currentColor 34%, transparent); }
+/* живое обновление: плашка «новые ↓» и счётчик непрочитанных в списке */
+.cm-newpill { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); z-index: 5; padding: 4px 14px; border-radius: 999px; font-size: 12px; cursor: pointer; color: inherit; background: color-mix(in srgb, currentColor 14%, transparent); border: 1px solid color-mix(in srgb, currentColor 28%, transparent); }
+.cm-newpill:hover { background: color-mix(in srgb, currentColor 24%, transparent); }
+.cm-conv-unread { margin-left: auto; flex: 0 0 auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #378add; color: #fff; font-size: 11px; line-height: 18px; text-align: center; font-weight: 600; }
+.cm-conv-unreadrow .cm-conv-name { font-weight: 600; }
 .cm-send-btn { width: 36px; height: 36px; flex: 0 0 auto; border: none; border-radius: 50%; background: color-mix(in srgb, #378add 24%, transparent); color: #4a90d9; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .cm-send-btn:hover { background: color-mix(in srgb, #378add 36%, transparent); }
 .cm-th-foot { padding: 10px 12px; border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }

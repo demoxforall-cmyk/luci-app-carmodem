@@ -51,6 +51,7 @@ const MAP = {
   "Neighbour cells": "Соседние соты",
   "New conversation — enter a number above and a message below": "Новая переписка — введите номер сверху и сообщение снизу",
   "New message": "Новое сообщение",
+  "New messages": "Новые сообщения",
   "No conversations": "Нет переписок",
   "Operator scan": "Поиск операторов",
   "Per-antenna (Rx0–3)": "По антеннам (Rx0–3)",

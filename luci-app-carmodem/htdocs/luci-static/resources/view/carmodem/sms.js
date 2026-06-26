@@ -2,6 +2,7 @@
 'require view';
 'require ui';
 'require dom';
+'require poll';
 'require carmodem';
 
 // CarModem — экран «Messages»: мессенджер-стиль (ТЗ 5.4).
@@ -33,6 +34,7 @@ function avaColor(num) {   // стабильный цвет аватара по 
 	for (i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 6;
 	return h;
 }
+function idSet(msgs) { var s = {}; (msgs || []).forEach(function(m) { s[m.id] = true; }); return s; }
 
 return view.extend({
 	handleSaveApply: null, handleSave: null, handleReset: null,
@@ -42,6 +44,7 @@ return view.extend({
 	selected: {},       // id -> true
 	ussdLog: [],        // [{dir,text}]
 	ussdActive: false,
+	unread: {},         // ключ диалога -> число непрочитанных входящих (живое обновление)
 
 	load: function() {
 		// один объединённый вызов хранилища (storage + счётчики) — без гонки AT+CPMS
@@ -61,6 +64,13 @@ return view.extend({
 		this.elList   = E('div', { 'class': 'cm-msg-list' });
 		this.elRight  = E('div', { 'class': 'cm-msg-right' });
 		this.renderSwitch(); this.renderFill(); this.renderList(); this.renderRight();
+
+		// Живое обновление: базовая сигнатура изменений SMS + частый ДЕШЁВЫЙ опрос
+		// (get_sms_sig = 1 вызов mmcli). Полная (дорогая) загрузка — только при изменении.
+		this.unread = {};
+		this._seenIds = idSet(this.messages);
+		this._sigKey = this._sigFromMsgs(this.messages);
+		poll.add(L.bind(this.pollSig, this), 3);
 
 		return E('div', {}, [
 			E('h2', {}, _('Messages')),
@@ -84,17 +94,18 @@ return view.extend({
 		this.fill = info;      // info.sim / info.modem -> полоски заполнения
 		var g = {};
 		this.messages.forEach(function(m) { var k = normNum(m.number); (g[k] = g[k] || []).push(m); });
-		// Сортируем по id: MM присваивает id в порядке создания/прихода — это
-		// единый ключ и для входящих, и для исходящих (у submit нет таймстампа,
-		// но id у отправленного раньше ответа меньше). Хронология: старые сверху.
-		function gid(m) { return (m.id == null ? 0 : m.id) + 0; }
+		// Сортируем по ВРЕМЕНИ (timestamp в ISO -> лексикографическое сравнение):
+		// id модема не отражает хронологию, а у наших исходящих id строковые ("sNN")
+		// из локального реестра. Хронология: старые сверху.
+		function tkey(m) { return String((m && m.timestamp) || ''); }
+		function bytime(a, b) { var x = tkey(a), y = tkey(b); return x < y ? -1 : (x > y ? 1 : 0); }
 		Object.keys(g).forEach(function(k) {
-			g[k].sort(function(a, b) { return gid(a) - gid(b); });
+			g[k].sort(bytime);
 		});
 		this.convos = g;
 		this.order = Object.keys(g).sort(function(a, b) {
 			var la = g[a][g[a].length - 1], lb = g[b][g[b].length - 1];
-			return gid(lb) - gid(la);   // диалоги: с самой свежей активностью (макс. id) сверху
+			return bytime(lb, la);   // диалоги: с самой свежей активностью сверху
 		});
 	},
 
@@ -105,8 +116,89 @@ return view.extend({
 			if (self.active && self.active.indexOf('__') !== 0 && !self.convos[self.active])
 				self.active = self.order[0] || null;
 			self.renderSwitch(); self.renderFill(); self.renderList(); self.renderRight();
+			self._seenIds = idSet(self.messages);
+			self._sigKey = self._sigFromMsgs(self.messages);
 		});
 	},
+
+	// --- живое обновление входящих: дешёвый сигнал -> ленивая полная загрузка ---
+	_sigStr: function(s) { return (s && s.n != null) ? (s.n + ':' + s.max + ':' + s.out) : ''; },
+	_sigFromMsgs: function(msgs) {
+		var n = 0, mx = 0, out = 0;
+		(msgs || []).forEach(function(m) {
+			if (m.dir === 'out') { out++; }
+			else { n++; var id = parseInt(m.id, 10); if (!isNaN(id) && id > mx) mx = id; }
+		});
+		return n + ':' + mx + ':' + out;
+	},
+	pollSig: function() {
+		var self = this;
+		return cm.rpc.getSmsSig().then(function(s) {
+			var key = self._sigStr(s);
+			if (key === '' || key === self._sigKey) return;   // нет изменений -> ничего не грузим
+			self._sigKey = key;
+			return self.pollMessages();
+		}).catch(function() {});
+	},
+	pollMessages: function() {
+		var self = this, prev = this._seenIds || {};
+		// состояние правой панели ДО перезагрузки (для сохранения ввода/прокрутки)
+		var ctx = { activeKey: this.active, ts: this._threadState(), compose: this._captureCompose() };
+		return this.load().then(function(d) {
+			var msgs = (d && d[0]) || [];
+			self.ingest(d);
+			self._seenIds = idSet(msgs);
+			var newIn = msgs.filter(function(m) { return m.dir === 'in' && !prev[m.id]; });
+			newIn.forEach(function(m) {
+				var k = normNum(m.number);
+				if (k === ctx.activeKey && ctx.ts.atBottom) return;   // открыт и внизу = прочитано
+				self.unread[k] = (self.unread[k] || 0) + 1;
+			});
+			self.renderFill();
+			self.renderList();
+			self.refreshActiveThread(ctx, newIn);
+		});
+	},
+	refreshActiveThread: function(ctx, newIn) {
+		// в этих режимах правую панель не трогаем — иначе сорвём ввод/выбор
+		if (this.active === '__new__' || this.active === '__ussd__' || this.selectMode) return;
+		if (!(this.active && this.convos[this.active])) { this.renderRight(); return; }
+		if (!ctx.ts.atBottom) this._scrollKeep = ctx.ts.top;   // читал историю — держим позицию
+		this.renderThread(this.active);
+		this._restoreCompose(ctx.compose);
+		var newHere = (newIn || []).some(function(m) { return normNum(m.number) === ctx.activeKey; });
+		if (!ctx.ts.atBottom && newHere) this._showNewPill();
+	},
+	_threadState: function() {
+		var b = this.elBody;
+		if (!b) return { atBottom: true, top: 0 };
+		return { atBottom: (b.scrollHeight - b.scrollTop - b.clientHeight) < 40, top: b.scrollTop };
+	},
+	_captureCompose: function() {
+		var i = this.elCompose;
+		if (!i) return null;
+		return { value: i.value, focused: (document.activeElement === i), caret: i.selectionStart };
+	},
+	_restoreCompose: function(c) {
+		var i = this.elCompose;
+		if (!i || !c) return;
+		i.value = c.value;
+		if (c.focused) { try { i.focus(); if (c.caret != null) i.setSelectionRange(c.caret, c.caret); } catch (e) {} }
+	},
+	_onThreadScroll: function() {
+		var b = this.elBody;
+		if (b && (b.scrollHeight - b.scrollTop - b.clientHeight) < 40) {
+			this._hideNewPill();
+			if (this.active && this.unread[this.active]) { delete this.unread[this.active]; this.renderList(); }
+		}
+	},
+	jumpToBottom: function() {
+		if (this.elBody) this.elBody.scrollTop = this.elBody.scrollHeight;
+		this._hideNewPill();
+		if (this.active && this.unread[this.active]) { delete this.unread[this.active]; this.renderList(); }
+	},
+	_showNewPill: function() { if (this.elNewPill) this.elNewPill.style.display = ''; },
+	_hideNewPill: function() { if (this.elNewPill) this.elNewPill.style.display = 'none'; },
 
 	// --- переключатель приёмного хранилища ---
 	renderSwitch: function() {
@@ -159,8 +251,8 @@ return view.extend({
 			E('div', { 'class': 'cm-conv-body' }, E('div', { 'class': 'cm-conv-name cm-accent' }, _('New message')))
 		]));
 		this.order.forEach(function(k) {
-			var msgs = self.convos[k], last = msgs[msgs.length - 1];
-			rows.push(E('div', { 'class': 'cm-conv' + (self.active === k ? ' cm-active' : ''), 'click': ui.createHandlerFn(self, 'open', k) }, [
+			var msgs = self.convos[k], last = msgs[msgs.length - 1], u = self.unread[k] || 0;
+			rows.push(E('div', { 'class': 'cm-conv' + (self.active === k ? ' cm-active' : '') + (u ? ' cm-conv-unreadrow' : ''), 'click': ui.createHandlerFn(self, 'open', k) }, [
 				self.avatarEl(last.number),
 				E('div', { 'class': 'cm-conv-body' }, [
 					E('div', { 'class': 'cm-conv-line' }, [
@@ -168,7 +260,8 @@ return view.extend({
 						E('span', { 'class': 'cm-conv-time' }, tsShort(last.timestamp))
 					]),
 					E('div', { 'class': 'cm-conv-prev' }, (last.dir === 'out' ? '✓ ' : '') + (last.text || ''))
-				])
+				]),
+				u ? E('span', { 'class': 'cm-conv-unread' }, String(u)) : ''
 			]));
 		});
 		if (!this.order.length)
@@ -182,7 +275,7 @@ return view.extend({
 		]);
 		dom.content(this.elList, [ E('div', { 'class': 'cm-conv-scroll' }, rows), ussd ]);
 	},
-	open: function(k) { this.active = k; this.selectMode = false; this.selected = {}; this.renderList(); this.renderRight(); },
+	open: function(k) { if (k && this.unread[k]) delete this.unread[k]; this.active = k; this.selectMode = false; this.selected = {}; this._hideNewPill(); this.renderList(); this.renderRight(); },
 
 	// --- правая панель ---
 	renderRight: function() {
@@ -249,9 +342,13 @@ return view.extend({
 		}
 		var body = E('div', { 'class': 'cm-th-body' }, bubbles);
 		this.elBody = body;
-		dom.content(this.elRight, [ head, body, foot ]);
-		// сохранённую позицию (выделение в режиме удаления) восстанавливаем синхронно —
-		// ползунок не прыгает; иначе автопрокрутка вниз (открытие диалога / после отправки)
+		// поле ввода (для сохранения текста/фокуса при автообновлении) и плашка «новые ↓»
+		this.elCompose = this.selectMode ? null : input;
+		this.elNewPill = E('div', { 'class': 'cm-newpill', 'style': 'display:none', 'click': L.bind(this.jumpToBottom, this) }, _('New messages') + ' ↓');
+		dom.content(this.elRight, [ head, body, foot, this.elNewPill ]);
+		body.addEventListener('scroll', L.bind(this._onThreadScroll, this));
+		// сохранённую позицию (выделение в режиме удаления / чтение истории при опросе)
+		// восстанавливаем синхронно — ползунок не прыгает; иначе автопрокрутка вниз
 		var keep = this._scrollKeep; this._scrollKeep = null;
 		if (keep != null) body.scrollTop = keep;
 		else window.setTimeout(function() { body.scrollTop = body.scrollHeight; }, 0);

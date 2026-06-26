@@ -15,7 +15,7 @@ case "$1" in
   list)
     cat <<JSON
 { "get_status":{}, "get_conn":{}, "get_conn_log":{}, "get_telemetry":{}, "get_neighbours":{}, "get_signal":{},
-  "get_location":{}, "get_sms":{}, "get_sms_storage":{}, "get_sms_storage_fill":{},
+  "get_location":{}, "get_sms":{}, "get_sms_sig":{}, "get_sms_storage":{}, "get_sms_storage_fill":{},
   "scan_operators":{}, "get_bands":{}, "set_band":{"bands":""}, "set_rat":{"mode":""},
   "set_sim":{"slot":0}, "set_ttl":{"in":0,"out":0}, "dial":{"up":true},
   "send_at":{"cmd":""}, "send_ussd":{"code":""}, "ussd_respond":{"response":""}, "ussd_cancel":{},
@@ -50,6 +50,9 @@ JSON
       get_sms)
         # Входящие SMS — MM messaging (ТЗ FR-31)
         printf '{"messages":%s}\n' "$(cm_mm_sms_list)" ;;
+      get_sms_sig)
+        # Дешёвый сигнал изменений SMS (1 вызов mmcli) — для частого опроса
+        cm_mm_sms_sig ;;
       get_sms_storage)
         # Текущее хранилище SMS (AT+CPMS): sm (SIM) / me (модем) / mt (combined)
         cm_sms_storage_get ;;
@@ -96,9 +99,17 @@ JSON
             # Успех определяем по коду возврата mmcli (надёжнее текста).
             sent=$(mmcli -s "$sid" --send 2>&1); rc=$?
             if [ "$rc" -eq 0 ]; then
-                # mmcli не проставляет timestamp у отправленных (submit) -> запоминаем
-                # время отправки по id, чтобы показать его в треде (cm_mm_sms_list)
-                echo "$sid $(date '+%Y-%m-%dT%H:%M:%S')" >> /tmp/cm_sms_send_times 2>/dev/null
+                # модем не хранит копию отправленного надёжно -> ведём свой реестр:
+                # полная запись (номер+текст+время), id="s<sid>", dir=out. cm_mm_sms_list
+                # подмешивает их к входящим. _cm_json_str доступна из mm.sh.
+                sts=$(date '+%Y-%m-%dT%H:%M:%S')
+                sjnum="\"$(printf '%s' "$to"   | _cm_json_str)\""
+                sjtxt="\"$(printf '%s' "$text" | _cm_json_str)\""
+                sobj=$(printf '{"id":"s%s","number":%s,"timestamp":"%s","text":%s,"storage":"me","dir":"out"}' \
+                    "$sid" "$sjnum" "$sts" "$sjtxt")
+                sstore="${CM_SMS_SENT:-/etc/carmodem/sent_sms.jsonl}"
+                mkdir -p "$(dirname "$sstore")" 2>/dev/null
+                printf '%s\n' "$sobj" >> "$sstore" 2>/dev/null
                 json_add_boolean ok 1
             else
                 json_add_string error "send_failed"; json_add_string raw "$sent"

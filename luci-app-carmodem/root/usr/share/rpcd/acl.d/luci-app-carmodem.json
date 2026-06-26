@@ -3,7 +3,7 @@
     "description": "Access to CarModem modem monitoring and control",
     "read": {
       "ubus": {
-        "carmodem": [ "get_status", "get_conn", "get_conn_log", "get_telemetry", "get_neighbours", "get_signal", "get_location", "scan_operators", "get_bands", "get_sms", "get_sms_storage", "get_sms_storage_fill" ]
+        "carmodem": [ "get_status", "get_conn", "get_conn_log", "get_telemetry", "get_neighbours", "get_signal", "get_location", "scan_operators", "get_bands", "get_sms", "get_sms_sig", "get_sms_storage", "get_sms_storage_fill" ]
       }
     },
     "write": {

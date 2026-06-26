@@ -117,8 +117,7 @@ cm_mm_sms_list() {
         pdu=$(printf '%s\n' "$blk" | sed -n 's/^sms\.properties\.pdu-type *: *//p' | head -1)
         case "$pdu" in
             deliver) dir=in ;;
-            submit)  dir=out ;;
-            *) continue ;;                   # status-report и пр. — мимо
+            *) continue ;;   # submit/status-report: исходящие берём из локального реестра
         esac
         num=$(printf '%s\n' "$blk" | sed -n 's/^sms\.content\.number *: *//p' | head -1)
         ts=$(printf  '%s\n' "$blk" | sed -n 's/^sms\.properties\.timestamp *: *//p' | head -1)
@@ -129,22 +128,57 @@ cm_mm_sms_list() {
         txt=$(printf '%b' "$txt")
         jnum="\"$(printf '%s' "$num" | _cm_json_str)\""
         jtxt="\"$(printf '%s' "$txt" | _cm_json_str)\""
-        # отправленные (submit) не имеют timestamp в mmcli — берём своё записанное
-        # при отправке время (rpcd send_sms -> /tmp/cm_sms_send_times), по id
-        case "$ts" in ''|'--') ts=$(grep "^$s " /tmp/cm_sms_send_times 2>/dev/null | tail -1 | cut -d' ' -f2-) ;; esac
         case "$ts"  in ''|'--') jts=null  ;; *) jts="\"$(printf '%s' "$ts"  | _cm_json_str)\"" ;; esac
         case "$sto" in ''|'--') jsto=null ;; *) jsto="\"$(printf '%s' "$sto" | _cm_json_str)\"" ;; esac
         obj=$(printf '{"id":%s,"number":%s,"timestamp":%s,"text":%s,"storage":%s,"dir":"%s"}' \
             "$s" "$jnum" "$jts" "$jtxt" "$jsto" "$dir")
         [ -z "$out" ] && out="$obj" || out="$out,$obj"
     done
+    # Исходящие — из собственного реестра (модем не хранит копию надёжно). Каждая
+    # строка файла = готовый JSON-объект {"id":"sNN",...,"dir":"out"}. Дублей нет:
+    # submit-копии модема выше пропускаются, id реестра — в своём пространстве.
+    store="${CM_SMS_SENT:-/etc/carmodem/sent_sms.jsonl}"
+    if [ -f "$store" ]; then
+        while IFS= read -r line || [ -n "$line" ]; do
+            case "$line" in '{'*'}') ;; *) continue ;; esac
+            [ -z "$out" ] && out="$line" || out="$out,$line"
+        done < "$store"
+    fi
     printf '[%s]\n' "$out"
+}
+
+# Дешёвый сигнал изменений SMS для частого опроса (живое обновление треда).
+# ОДИН вызов mmcli (только список id, без чтения тел `mmcli -s`):
+#   n   — число входящих id, max — макс. числовой id (ловит приход/удаление),
+#   out — число строк в реестре отправленных (ловит свои отправки/удаления).
+# Меняется ключ n:max:out -> фронтенд делает полную (дорогую) cm_mm_sms_list.
+cm_mm_sms_sig() {
+    ids=$(cm_mm_raw -m "$CM_MM_INDEX" --messaging-list-sms | sed -n 's#.*/SMS/\([0-9][0-9]*\).*#\1#p')
+    n=0; mx=0
+    for s in $ids; do
+        n=$((n+1))
+        [ "$s" -gt "$mx" ] 2>/dev/null && mx="$s"
+    done
+    store="${CM_SMS_SENT:-/etc/carmodem/sent_sms.jsonl}"
+    out=0
+    [ -f "$store" ] && out=$(grep -c '^{' "$store" 2>/dev/null)
+    printf '{"n":%d,"max":%d,"out":%d}\n' "$n" "$mx" "$out"
 }
 
 # Удаление SMS по списку id (через запятую/пробел). Только цифры (NFR-6).
 cm_mm_sms_delete() {
+    store="${CM_SMS_SENT:-/etc/carmodem/sent_sms.jsonl}"
     ok=0; fail=0
     for id in $(printf '%s' "$1" | tr ',' ' '); do
+        # исходящее из реестра: id вида sNN -> удаляем строку из файла
+        case "$id" in
+            s[0-9]*)
+                if [ -f "$store" ] && grep -qF "\"id\":\"$id\"," "$store"; then
+                    grep -vF "\"id\":\"$id\"," "$store" > "$store.tmp" 2>/dev/null && mv "$store.tmp" "$store"
+                    ok=$((ok+1))
+                else fail=$((fail+1)); fi
+                continue ;;
+        esac
         case "$id" in ''|*[!0-9]*) continue ;; esac
         if mmcli -m "$CM_MM_INDEX" --messaging-delete-sms="$id" >/dev/null 2>&1; then
             ok=$((ok+1)); else fail=$((fail+1)); fi
