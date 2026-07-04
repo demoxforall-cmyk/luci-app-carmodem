@@ -78,7 +78,7 @@ return view.extend({
 			E('h3', {}, [ cm.icon('signal'), _('RAT mode') ]),
 			E('div', { 'class': 'cm-field-ctl', 'style': 'margin:2px 0 12px' }, [ sel,
 				E('button', { 'class': 'btn cbi-button-action', 'click': ui.createHandlerFn(this, function() {
-					return cm.rpc.setRat(sel.value).then(this.report.bind(this));
+					return this.run(cm.rpc.setRat(sel.value));
 				}) }, _('Apply RAT')) ]),
 			pillRow
 		]);
@@ -106,14 +106,14 @@ return view.extend({
 				E('label', { 'class': 'cm-field-lbl' }, _('SIM slot')),
 				E('div', { 'class': 'cm-field-ctl' }, [ seg,
 					E('button', { 'class': 'btn', 'click': ui.createHandlerFn(this, function() {
-						return cm.rpc.setSim(simVal).then(this.report.bind(this));
+						return this.run(cm.rpc.setSim(simVal));
 					}) }, _('Set')) ])
 			]),
 			E('div', { 'class': 'cm-field cm-field-div' }, [
 				E('label', { 'class': 'cm-field-lbl' }, _('TTL in / out')),
 				E('div', { 'class': 'cm-field-ctl' }, [ ttlIn, E('span', { 'class': 'cm-sep' }, '/'), ttlOut,
 					E('button', { 'class': 'btn', 'click': ui.createHandlerFn(this, function() {
-						return cm.rpc.setTtl(Number(ttlIn.value), Number(ttlOut.value)).then(this.report.bind(this));
+						return this.run(cm.rpc.setTtl(Number(ttlIn.value), Number(ttlOut.value)));
 					}) }, _('Set')) ])
 			])
 		]);
@@ -164,7 +164,7 @@ return view.extend({
 				E('button', { 'class': 'btn cbi-button-action', 'style': 'margin-left:auto', 'click': ui.createHandlerFn(this, function() {
 					return confirmDanger(_('Save & apply band-lock? Connection may drop briefly.')).then(function(ok) {
 						if (!ok) return;
-						return cm.rpc.setBand(collectAll()).then(self.report.bind(self));
+						return self.run(cm.rpc.setBand(collectAll()));
 					});
 				}) }, _('Save & apply'))
 			])
@@ -187,15 +187,15 @@ return view.extend({
 			]),
 			E('div', { 'class': 'cm-conn-grid' }, [
 				E('button', { 'class': 'btn cbi-button-positive cm-conn-btn', 'click': ui.createHandlerFn(this, function() {
-					return cm.rpc.dial(true).then(this.report.bind(this));
+					return this.run(cm.rpc.dial(true));
 				}) }, [ cm.icon('plug'), _('Connect') ]),
 				E('button', { 'class': 'btn cbi-button-negative cm-conn-btn', 'click': ui.createHandlerFn(this, function() {
-					return cm.rpc.dial(false).then(this.report.bind(this));
+					return this.run(cm.rpc.dial(false));
 				}) }, [ cm.icon('x'), _('Disconnect') ]),
 				E('button', { 'class': 'btn cbi-button-reset cm-conn-btn', 'click': ui.createHandlerFn(this, function() {
-					return confirmDanger(_('Reset the modem? This drops the connection.')).then(function(ok) {
+					return this.run(confirmDanger(_('Reset the modem? This drops the connection.')).then(function(ok) {
 						if (ok) return cm.rpc.resetModem();
-					}).then(this.report.bind(this));
+					}));
 				}) }, [ cm.icon('refresh'), _('Reset modem') ]),
 				this.elLogBtn
 			])
@@ -354,6 +354,17 @@ return view.extend({
 		]);
 	},
 
+	run: function(p) {
+		// обёртка действий: .catch на транспортный отказ/таймаут ubus (иначе молчаливый
+		// провал кнопки + unhandled rejection в консоли); null/undefined = отмена -> тихо
+		var self = this;
+		return Promise.resolve(p).then(function(r) {
+			if (r == null) return;
+			self.report(r);
+		}).catch(function(e) {
+			ui.addNotification(null, E('p', {}, _('Request failed') + ': ' + ((e && e.message) || _('timeout'))), 'warning');
+		});
+	},
 	report: function(r) {
 		var ok = r && (r.ok || r.raw != null);
 		if (ok && r && r.warn === 'flow_offloading') {

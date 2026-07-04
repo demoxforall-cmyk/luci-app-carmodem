@@ -269,6 +269,9 @@
 .cm-newpill:hover { background: color-mix(in srgb, currentColor 24%, transparent); }
 .cm-conv-unread { margin-left: auto; flex: 0 0 auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #378add; color: #fff; font-size: 11px; line-height: 18px; text-align: center; font-weight: 600; }
 .cm-conv-unreadrow .cm-conv-name { font-weight: 600; }
+/* устойчивость к таймаутам: устаревший дашборд затемняем + плашка «нет ответа» */
+.cm-stale { opacity: .5; transition: opacity .3s; }
+.cm-stale-note { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 6px 12px; border-radius: 8px; font-size: 13px; color: color-mix(in srgb, currentColor 75%, transparent); background: color-mix(in srgb, #BA7517 16%, transparent); border: 1px solid color-mix(in srgb, #BA7517 32%, transparent); }
 .cm-send-btn { width: 36px; height: 36px; flex: 0 0 auto; border: none; border-radius: 50%; background: color-mix(in srgb, #378add 24%, transparent); color: #4a90d9; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .cm-send-btn:hover { background: color-mix(in srgb, #378add 36%, transparent); }
 .cm-th-foot { padding: 10px 12px; border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }

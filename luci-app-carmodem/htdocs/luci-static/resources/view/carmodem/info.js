@@ -41,25 +41,39 @@ return view.extend({
 	handleSaveApply: null, handleSave: null, handleReset: null,
 
 	load: function() {
-		return Promise.all([
-			L.resolveDefault(cm.rpc.getStatus(), {}),
-			L.resolveDefault(cm.rpc.getSignal(), {}),
-			L.resolveDefault(cm.rpc.getTelemetry(), {}),
-			L.resolveDefault(cm.rpc.getNeighbours(), [])
-		]);
+		// ОДИН агрегирующий вызов вместо 4 (get_dashboard) -> 1 форк rpcd на тик.
+		// null при таймауте/ошибке -> дашборд НЕ бланкуем (см. tick).
+		return L.resolveDefault(cm.rpc.getDashboard(), null).then(function(d) {
+			if (!d || !d.status) return null;
+			return [ d.status || {}, d.signal || {}, d.telemetry || {}, d.cells || [] ];
+		});
 	},
 
 	render: function(data) {
 		cm.injectCSS();
 		var grid = E('div', { 'class': 'cm-grid' });
-		this.update(grid, data);
-		poll.add(L.bind(function() {
-			return this.load().then(L.bind(this.update, this, grid));
-		}, this), 3);
-		return E('div', {}, [
-			E('h2', {}, _('Status')),
-			grid
+		this.update(grid, data || [ {}, {}, {}, [] ]);
+		// плашка «нет ответа»: при таймауте RPC (занят ModemManager: скан/reset/dial,
+		// или занят AT-порт) показываем ПОСЛЕДНИЕ данные, а не моргаем в N/A.
+		this.elStale = E('div', { 'class': 'cm-stale-note', 'style': 'display:none' }, [
+			cm.icon('alert'), E('span', {}, _('No response from the router — showing last known data'))
 		]);
+		poll.add(L.bind(this.tick, this, grid), 3);
+		return E('div', {}, [ E('h2', {}, _('Status')), this.elStale, grid ]);
+	},
+
+	tick: function(grid) {
+		var self = this;
+		return this.load().then(function(d) {
+			if (!d) {   // таймаут/пустой ответ -> данные НЕ трём, помечаем устаревшими
+				if (self.elStale) self.elStale.style.display = '';
+				grid.classList.add('cm-stale');
+				return;
+			}
+			if (self.elStale) self.elStale.style.display = 'none';
+			grid.classList.remove('cm-stale');
+			self.update(grid, d);
+		});
 	},
 
 	update: function(grid, data) {

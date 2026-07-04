@@ -111,6 +111,14 @@ echo "[лёгкий бейдж Connection: cm_mm_conn одним awk-прохо�
 CONN=$(cm_mm_conn)
 check mm_conn "$CONN" '{"state":"connected","access_tech":"lte"}'
 
+echo "[агрегат Status: cm_dashboard = один валидный JSON status+signal+telemetry+cells]"
+DASH=$(cm_dashboard)
+check dash_status "$DASH" '"status":{'
+check dash_cells  "$DASH" '"cells":['
+printf '%s' "$DASH" > "$ROOT/build/_dash.json"
+if deno eval 'JSON.parse(Deno.readTextFileSync(Deno.args[0]))' "$ROOT/build/_dash.json" >/dev/null 2>&1; then pass=$((pass+1)); echo "  ok   dash_valid_json"; else fail=$((fail+1)); echo "  FAIL dash_valid_json — $DASH"; fi
+rm -f "$ROOT/build/_dash.json"
+
 echo "[реестр отправленных: удаление под flock + уникальный tmp, один проход]"
 DT="${TMPDIR:-/tmp}/cm_test_sent.jsonl"; DL="${TMPDIR:-/tmp}/cm_test_sent.lock"
 printf '%s\n%s\n' \

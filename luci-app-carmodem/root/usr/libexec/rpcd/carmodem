@@ -14,7 +14,7 @@ CM_SHARE="${CM_SHARE:-/usr/share/carmodem}"
 case "$1" in
   list)
     cat <<JSON
-{ "get_status":{}, "get_conn":{}, "get_conn_log":{}, "get_telemetry":{}, "get_neighbours":{}, "get_signal":{},
+{ "get_status":{}, "get_dashboard":{}, "get_conn":{}, "get_conn_log":{}, "get_telemetry":{}, "get_neighbours":{}, "get_signal":{},
   "get_location":{}, "get_sms":{}, "get_sms_sig":{}, "get_sms_storage":{}, "get_sms_storage_fill":{},
   "scan_operators":{}, "get_bands":{}, "set_band":{"bands":""}, "set_rat":{"mode":""},
   "set_sim":{"slot":0}, "set_ttl":{"in":0,"out":0}, "dial":{"up":true},
@@ -31,6 +31,9 @@ JSON
       get_status)
         # Идентификация/регистрация/оператор/сессия — MM
         cm_mm_status ;;
+      get_dashboard)
+        # Агрегат экрана Status: 1 форк rpcd вместо 4 (status+signal+telemetry+cells)
+        cm_dashboard ;;
       get_conn)
         # Лёгкое состояние модема для живого бейджа Connection (~1 c)
         cm_mm_conn ;;

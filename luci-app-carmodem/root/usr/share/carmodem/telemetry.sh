@@ -40,3 +40,11 @@ cm_telemetry_at() {
     printf '"temp":%s' "$temp"
     printf '}'
 }
+
+# Агрегат экрана Status: status+signal+telemetry+cells в ОДНОМ процессе rpcd
+# (1 форк + 1 сорсинг набора shell-файлов на тик вместо 4). Число mmcli/AT-вызовов
+# не меняется — экономятся форки rpcd-плагина и HTTP/ubus-накладные.
+cm_dashboard() {
+    printf '{"status":%s,"signal":%s,"telemetry":%s,"cells":%s}\n' \
+        "$(cm_mm_status)" "$(cm_mm_signal)" "$(cm_telemetry_at)" "$(cm_mm_neighbours)"
+}

@@ -10,9 +10,10 @@
 // ресурсы по `?v=<версия_luci>`, которая между нашими сборками не меняется —
 // поэтому браузер не перечитывает обновлённый carmodem.css. Бампить вместе с
 // PKG_VERSION при изменении стилей/вьюх.
-var CM_VER = '3.8';
+var CM_VER = '3.9';
 
 var callGetStatus     = rpc.declare({ object: 'carmodem', method: 'get_status' });
+var callGetDashboard  = rpc.declare({ object: 'carmodem', method: 'get_dashboard' });
 var callGetConn       = rpc.declare({ object: 'carmodem', method: 'get_conn' });
 var callGetConnLog    = rpc.declare({ object: 'carmodem', method: 'get_conn_log' });
 var callGetSignal     = rpc.declare({ object: 'carmodem', method: 'get_signal' });
@@ -102,7 +103,7 @@ var ICONS = {
 
 return baseclass.extend({
 	rpc: {
-		getStatus: callGetStatus, getConn: callGetConn, getConnLog: callGetConnLog, getSignal: callGetSignal,
+		getStatus: callGetStatus, getDashboard: callGetDashboard, getConn: callGetConn, getConnLog: callGetConnLog, getSignal: callGetSignal,
 		getTelemetry: callGetTelemetry,
 		getNeighbours: callGetNeighbours,
 		getLocation: callGetLocation,

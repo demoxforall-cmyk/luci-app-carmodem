@@ -222,6 +222,9 @@ msgstr "Новые сообщения"
 msgid "No conversations"
 msgstr "Нет переписок"
 
+msgid "No response from the router — showing last known data"
+msgstr "Нет ответа от роутера — показаны последние данные"
+
 msgid "Operator scan"
 msgstr "Поиск операторов"
 
@@ -260,6 +263,9 @@ msgstr "Регистрация"
 
 msgid "Reply to menu"
 msgstr "Ответить в меню"
+
+msgid "Request failed"
+msgstr "Запрос не удался"
 
 msgid "Reset modem"
 msgstr "Сброс модема"
@@ -410,6 +416,9 @@ msgstr "выбрано"
 
 msgid "session active"
 msgstr "сессия активна"
+
+msgid "timeout"
+msgstr "таймаут"
 
 msgid "— modem console — pick a command above or type your own —"
 msgstr "— консоль модема — выберите команду сверху или введите свою —"
