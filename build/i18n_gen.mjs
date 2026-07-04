@@ -82,6 +82,7 @@ const MAP = {
   "Signal quality": "Качество сигнала",
   "Signal strength": "Сила сигнала",
   "TTL in / out": "TTL вход / выход",
+  "TTL rule saved, but flow offloading is enabled — offloaded connections bypass it. Disable “Software flow offloading” in Network → Firewall for the fix to take effect.": "TTL-правило сохранено, но включён flow offloading — оффлоаженные соединения его обходят. Отключите «Software flow offloading» в Network → Firewall, чтобы фикс заработал.",
   "TX power": "Мощность TX",
   "Tech": "Технология",
   "Temperature": "Температура",

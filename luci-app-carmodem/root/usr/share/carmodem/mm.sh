@@ -27,6 +27,16 @@ cm_mm_raw() {
 
 _cm_mm_parse() { awk -v fn="$1" -f "$CM_MM_AWK"; }
 
+# Актуальный индекс модема. MM нумерует объекты монотонно: после --reset,
+# смены USB-режима или слота SIM модем получает НОВЫЙ индекс (0 -> 1 -> ...),
+# и захардкоженный 0 бьёт в несуществующий объект. Вызывается один раз на
+# rpcd-процесс (rpcd/carmodem, ветка call) — далее все функции берут
+# разрезолвленный CM_MM_INDEX. Fallback — прежний дефолт.
+cm_mm_resolve_idx() {
+    idx=$(cm_mm_raw -L 2>/dev/null | sed -n 's#.*/Modem/\([0-9][0-9]*\).*#\1#p' | head -1)
+    printf '%s' "${idx:-${CM_MM_INDEX:-0}}"
+}
+
 cm_mm_status() {
     modem=$(cm_mm_raw -m "$CM_MM_INDEX")
     [ -n "$modem" ] || { echo '{}'; return; }
@@ -65,8 +75,15 @@ cm_mm_conn() {
 }
 
 cm_mm_signal() {
-    # требуется заранее: mmcli -m 0 --signal-setup=<rate> (делает init.d)
+    # требуется заранее: mmcli --signal-setup=<rate> (включает init.d).
+    # Самолечение: после reset/переиндексации модема setup слетает (init.d
+    # делает его один раз при старте) -> refresh.rate=0 и пустые метрики.
+    # Включаем заново и перечитываем.
     out=$(cm_mm_raw -m "$CM_MM_INDEX" --signal-get)
+    if ! printf '%s' "$out" | grep -q 'signal\.refresh\.rate *: *[1-9]'; then
+        cm_mm_raw -m "$CM_MM_INDEX" --signal-setup=5 >/dev/null 2>&1
+        out=$(cm_mm_raw -m "$CM_MM_INDEX" --signal-get)
+    fi
     [ -n "$out" ] || { echo '{}'; return; }
     printf '%s\n' "$out" | _cm_mm_parse signal
 }

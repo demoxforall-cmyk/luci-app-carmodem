@@ -10,7 +10,7 @@
 // ресурсы по `?v=<версия_luci>`, которая между нашими сборками не меняется —
 // поэтому браузер не перечитывает обновлённый carmodem.css. Бампить вместе с
 // PKG_VERSION при изменении стилей/вьюх.
-var CM_VER = '3.6';
+var CM_VER = '3.7';
 
 var callGetStatus     = rpc.declare({ object: 'carmodem', method: 'get_status' });
 var callGetConn       = rpc.declare({ object: 'carmodem', method: 'get_conn' });

@@ -17,6 +17,7 @@ export CM_MM_RAW="$HERE/mocks/mock_mmcli.sh"
 . "$SHARE/at.sh"
 . "$SHARE/telemetry.sh"
 . "$SHARE/mm.sh"
+. "$SHARE/control.sh"
 
 pass=0; fail=0
 check() { # <name> <actual> <needle>
@@ -104,6 +105,16 @@ rm -f "$ROOT/build/_sms.json"
 # max=5, out=1 (одна строка в реестре отправленных)
 SIG=$(CM_SMS_SENT="$HERE/fixtures/mm/sent_sms.jsonl" cm_mm_sms_sig)
 check sms_sig "$SIG" '{"n":3,"max":5,"out":1}'
+
+echo
+echo "[динамический индекс модема + SIM-слот через AT]"
+# mock на -L отдаёт синтетический список с /Modem/1 -> резолв должен дать 1
+# (не совпадает с fallback-дефолтом 0 -> тест реально проверяет извлечение)
+IDX=$(cm_mm_resolve_idx)
+check mm_resolve_idx "$IDX" '1'
+# mock AT на QUIMSLOT отвечает голым OK -> ветка успешного переключения
+SIMR=$(cm_set_sim 1)
+check set_sim_ok "$SIMR" '"ok":true'
 
 echo
 echo "[синтетический NR-сигнал (по документации; нет 5G-покрытия)]"

@@ -123,6 +123,8 @@ return view.extend({
 	bandCard: function(title, prefix, list, active, variant) {
 		var act = {}; (active || []).forEach(function(a) { if (a) act[a] = 1; });
 		var boxes = {}, self = this;
+		this._bandBoxes = this._bandBoxes || {};   // общий реестр чекбоксов обоих семейств (LTE+NR)
+		var shared = this._bandBoxes;
 		var count = E('span', { 'class': 'cm-countchip' });
 		function refresh() {
 			var on = Object.keys(boxes).filter(function(k) { return boxes[k].checked; }).length;
@@ -132,14 +134,17 @@ return view.extend({
 			var id = prefix + b;
 			var inp = E('input', { 'type': 'checkbox', 'value': id });
 			if (act[id]) inp.checked = true;
-			boxes[id] = inp;
+			boxes[id] = inp; shared[id] = inp;
 			var chip = E('label', { 'class': 'cm-chip' + (act[id] ? ' cm-on' : '') }, [
 				inp, E('span', { 'class': 'cm-chip-led' }), E('span', {}, id)
 			]);
 			inp.addEventListener('change', function() { chip.classList.toggle('cm-on', inp.checked); refresh(); });
 			return chip;
 		}));
-		function collect() { return Object.keys(boxes).filter(function(k) { return boxes[k].checked; }).join(','); }
+		// band-lock у MM атомарен (SetCurrentBands заменяет ВЕСЬ список) -> apply шлёт
+		// объединённый выбор LTE+NR из обеих карточек, иначе применение одной стирало бы
+		// лок другого семейства (риск потери связи).
+		function collectAll() { return Object.keys(shared).filter(function(k) { return shared[k].checked; }).join(','); }
 		function setAll(v) {
 			Object.keys(boxes).forEach(function(k) {
 				boxes[k].checked = v;
@@ -159,7 +164,7 @@ return view.extend({
 				E('button', { 'class': 'btn cbi-button-action', 'style': 'margin-left:auto', 'click': ui.createHandlerFn(this, function() {
 					return confirmDanger(_('Save & apply band-lock? Connection may drop briefly.')).then(function(ok) {
 						if (!ok) return;
-						return cm.rpc.setBand(collect()).then(self.report.bind(self));
+						return cm.rpc.setBand(collectAll()).then(self.report.bind(self));
 					});
 				}) }, _('Save & apply'))
 			])
@@ -351,6 +356,10 @@ return view.extend({
 
 	report: function(r) {
 		var ok = r && (r.ok || r.raw != null);
+		if (ok && r && r.warn === 'flow_offloading') {
+			ui.addNotification(null, E('p', {}, _('TTL rule saved, but flow offloading is enabled — offloaded connections bypass it. Disable “Software flow offloading” in Network → Firewall for the fix to take effect.')), 'warning');
+			return;
+		}
 		ui.addNotification(null,
 			E('p', {}, ok ? _('Done') : ((r && r.error) ? ('Error: ' + r.error) : _('Failed'))),
 			ok ? 'info' : 'warning');

@@ -10,6 +10,7 @@ for a in "$@"; do
     --get-cell-info)      cat "$FIX/cellinfo.kv"; exit 0 ;;
     --location-get)       cat "$FIX/location.kv"; exit 0 ;;
     --messaging-list-sms) cat "$FIX/sms_list.kv"; exit 0 ;;
+    -L)                   printf 'modem-list.value[1] : /org/freedesktop/ModemManager1/Modem/1\n'; exit 0 ;;
     -i)                   cat "$FIX/sim.kv";      exit 0 ;;
     -b)                   cat "$FIX/bearer.kv";   exit 0 ;;
   esac

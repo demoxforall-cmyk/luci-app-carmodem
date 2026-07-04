@@ -24,6 +24,9 @@ case "$1" in
 JSON
     ;;
   call)
+    # актуальный индекс модема: после reset/re-init MM индекс меняется,
+    # захардкоженный 0 бил бы в несуществующий объект (1 дешёвый mmcli -L)
+    CM_MM_INDEX=$(cm_mm_resolve_idx)
     case "$2" in
       get_status)
         # Идентификация/регистрация/оператор/сессия — MM
@@ -87,6 +90,10 @@ JSON
       send_sms)
         read -r input; json_load "$input"
         json_get_var to to; json_get_var text text
+        # номер строго +цифры, апостроф в тексте -> U+2019: иное ломает
+        # key-value парсер mmcli и позволяет дописать чужие свойства (NFR-6)
+        cm_sanitize_phone "$to" || { echo '{"error":"bad_number"}'; exit 0; }
+        text=$(cm_sms_text_clean "$text")
         midx="${CM_MM_INDEX:-0}"
         # 1) создать SMS-объект (MM сам кодирует UCS2/собирает длинные, FR-31)
         created=$(mmcli -m "$midx" --messaging-create-sms="number='$to',text='$text'" 2>&1)
@@ -100,16 +107,22 @@ JSON
             sent=$(mmcli -s "$sid" --send 2>&1); rc=$?
             if [ "$rc" -eq 0 ]; then
                 # модем не хранит копию отправленного надёжно -> ведём свой реестр:
-                # полная запись (номер+текст+время), id="s<sid>", dir=out. cm_mm_sms_list
+                # полная запись (номер+текст+время), dir=out. cm_mm_sms_list
                 # подмешивает их к входящим. _cm_json_str доступна из mm.sh.
+                # id = s<epoch>_<sid>: голый sid MM обнуляется при каждом ребуте,
+                # и дубль id в постоянном реестре ломал бы выборочное удаление.
                 sts=$(date '+%Y-%m-%dT%H:%M:%S')
+                suid="s$(date +%s)_$sid"
                 sjnum="\"$(printf '%s' "$to"   | _cm_json_str)\""
                 sjtxt="\"$(printf '%s' "$text" | _cm_json_str)\""
-                sobj=$(printf '{"id":"s%s","number":%s,"timestamp":"%s","text":%s,"storage":"me","dir":"out"}' \
-                    "$sid" "$sjnum" "$sts" "$sjtxt")
+                sobj=$(printf '{"id":"%s","number":%s,"timestamp":"%s","text":%s,"storage":"me","dir":"out"}' \
+                    "$suid" "$sjnum" "$sts" "$sjtxt")
                 sstore="${CM_SMS_SENT:-/etc/carmodem/sent_sms.jsonl}"
                 mkdir -p "$(dirname "$sstore")" 2>/dev/null
                 printf '%s\n' "$sobj" >> "$sstore" 2>/dev/null
+                # submit-объект в MM больше не нужен (копия — в реестре):
+                # иначе они копятся до ребута и раздувают каждый полный get_sms
+                mmcli -m "$midx" --messaging-delete-sms="$sid" >/dev/null 2>&1
                 json_add_boolean ok 1
             else
                 json_add_string error "send_failed"; json_add_string raw "$sent"
@@ -120,6 +133,8 @@ JSON
       get_bands) cm_get_bands ;;
       set_band) read -r input; json_load "$input"; json_get_var bands bands; cm_set_band "$bands" ;;
       set_rat)  read -r input; json_load "$input"; json_get_var mode mode;  cm_set_rat "$mode" ;;
+      set_sim)  read -r input; json_load "$input"; json_get_var slot slot;  cm_set_sim "$slot" ;;
+      set_ttl)  read -r input; json_load "$input"; json_get_var tin in; json_get_var tout out; cm_set_ttl "$tin" "$tout" ;;
       dial)     read -r input; json_load "$input"; json_get_var up up;      cm_dial "$up" ;;
       delete_sms) read -r input; json_load "$input"; json_get_var ids ids; cm_mm_sms_delete "$ids" ;;
       set_sms_storage) read -r input; json_load "$input"; json_get_var storage storage; cm_sms_storage_set "$storage" ;;

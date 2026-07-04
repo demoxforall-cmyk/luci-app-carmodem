@@ -336,6 +336,9 @@ msgstr "Статус"
 msgid "TTL in / out"
 msgstr "TTL вход / выход"
 
+msgid "TTL rule saved, but flow offloading is enabled — offloaded connections bypass it. Disable “Software flow offloading” in Network → Firewall for the fix to take effect."
+msgstr "TTL-правило сохранено, но включён flow offloading — оффлоаженные соединения его обходят. Отключите «Software flow offloading» в Network → Firewall, чтобы фикс заработал."
+
 msgid "TX power"
 msgstr "Мощность TX"
 
