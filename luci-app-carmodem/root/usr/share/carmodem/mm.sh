@@ -53,8 +53,9 @@ cm_mm_status() {
     netdir="${CM_NET_DIR:-/sys/class/net}"
     live=""
     if [ -n "$iface" ] && [ -d "$netdir/$iface/statistics" ]; then
-        rx=$(cat "$netdir/$iface/statistics/rx_bytes" 2>/dev/null)
-        tx=$(cat "$netdir/$iface/statistics/tx_bytes" 2>/dev/null)
+        rx=""; tx=""
+        read rx < "$netdir/$iface/statistics/rx_bytes" 2>/dev/null
+        read tx < "$netdir/$iface/statistics/tx_bytes" 2>/dev/null
         [ -n "$rx" ] && live="${live}bearer.stats.bytes-rx : ${rx}
 "
         [ -n "$tx" ] && live="${live}bearer.stats.bytes-tx : ${tx}
@@ -67,11 +68,11 @@ cm_mm_status() {
 # Лёгкий опрос состояния модема (живой бейдж Connection, ~1 c): одно обращение
 # mmcli -m -> state + access-technology, без bearer/SIM/трафика (быстро).
 cm_mm_conn() {
-    out=$(cm_mm_raw -m "$CM_MM_INDEX" 2>/dev/null)
-    st=$(printf '%s\n' "$out" | sed -n 's/.*modem\.generic\.state *: *//p' | head -1)
-    tech=$(printf '%s\n' "$out" | sed -n 's/.*modem\.generic\.access-technologies\.value\[1\] *: *//p' | head -1)
-    [ -n "$st" ] || st="--"
-    printf '{"state":"%s","access_tech":"%s"}\n' "$st" "$tech"
+    # один проход awk вместо 2×(printf|sed|head) — самый частый тик (1 c на Advanced)
+    cm_mm_raw -m "$CM_MM_INDEX" 2>/dev/null | awk '
+        /modem\.generic\.state / { sub(/^[^:]*: */, ""); st=$0 }
+        /modem\.generic\.access-technologies\.value\[1\] / { sub(/^[^:]*: */, ""); tech=$0 }
+        END { if (st=="") st="--"; printf "{\"state\":\"%s\",\"access_tech\":\"%s\"}\n", st, tech }'
 }
 
 cm_mm_signal() {
@@ -185,20 +186,37 @@ cm_mm_sms_sig() {
 # Удаление SMS по списку id (через запятую/пробел). Только цифры (NFR-6).
 cm_mm_sms_delete() {
     store="${CM_SMS_SENT:-/etc/carmodem/sent_sms.jsonl}"
-    ok=0; fail=0
+    ok=0; fail=0; regids=""
     for id in $(printf '%s' "$1" | tr ',' ' '); do
-        # исходящее из реестра: id вида sNN -> удаляем строку из файла
         case "$id" in
-            s[0-9]*)
-                if [ -f "$store" ] && grep -qF "\"id\":\"$id\"," "$store"; then
-                    grep -vF "\"id\":\"$id\"," "$store" > "$store.tmp" 2>/dev/null && mv "$store.tmp" "$store"
-                    ok=$((ok+1))
-                else fail=$((fail+1)); fi
-                continue ;;
+            s[0-9]*)     regids="$regids $id" ;;   # реестровое -> один проход ниже
+            ''|*[!0-9]*) : ;;                      # мусор — пропускаем
+            *)           if mmcli -m "$CM_MM_INDEX" --messaging-delete-sms="$id" >/dev/null 2>&1; then
+                             ok=$((ok+1)); else fail=$((fail+1)); fi ;;
         esac
-        case "$id" in ''|*[!0-9]*) continue ;; esac
-        if mmcli -m "$CM_MM_INDEX" --messaging-delete-sms="$id" >/dev/null 2>&1; then
-            ok=$((ok+1)); else fail=$((fail+1)); fi
     done
+    # реестровые исходящие удаляем ОДНИМ переписыванием под общим flock (без гонки
+    # с append из send_sms) и с уникальным tmp (без затирания при параллельном delete).
+    # Субшелл печатает число РЕАЛЬНО удалённых (были в файле) -> точный учёт ok/fail.
+    if [ -n "$regids" ] && [ -f "$store" ]; then
+        cnt=$( ( flock 9 2>/dev/null
+          tmp="$store.tmp.$$"
+          # при сбое cp (нет места в /etc overlay и т.п.) реестр НЕ трогаем
+          cp "$store" "$tmp" 2>/dev/null || { rm -f "$tmp"; echo 0; exit 0; }
+          c=0
+          for id in $regids; do
+              grep -qF "\"id\":\"$id\"," "$tmp" && c=$((c+1))
+              # grep -vF даёт rc=1, когда отфильтровано ВСЁ (пустой вывод) — это
+              # НОРМА, а не ошибка; mv делаем БЕЗУСЛОВНО (файл создан, в т.ч. пустой)
+              grep -vF "\"id\":\"$id\"," "$tmp" > "$tmp.n" 2>/dev/null
+              mv "$tmp.n" "$tmp"
+          done
+          mv "$tmp" "$store"
+          echo "$c"
+        ) 9>"${CM_SMS_LOCK:-/tmp/carmodem-sms.lock}" )
+        rn=0; for id in $regids; do rn=$((rn+1)); done
+        ok=$((ok + ${cnt:-0}))
+        fail=$((fail + rn - ${cnt:-0}))
+    fi
     printf '{"deleted":%d,"failed":%d}\n' "$ok" "$fail"
 }

@@ -119,7 +119,13 @@ JSON
                     "$suid" "$sjnum" "$sts" "$sjtxt")
                 sstore="${CM_SMS_SENT:-/etc/carmodem/sent_sms.jsonl}"
                 mkdir -p "$(dirname "$sstore")" 2>/dev/null
-                printf '%s\n' "$sobj" >> "$sstore" 2>/dev/null
+                # append под общим flock (без гонки с удалением) + ротация: держим
+                # последние 500 записей (страховка от неограниченного роста в /etc)
+                ( flock 9 2>/dev/null
+                  printf '%s\n' "$sobj" >> "$sstore"
+                  ln=$(wc -l < "$sstore" 2>/dev/null || echo 0)
+                  [ "${ln:-0}" -gt 500 ] && { tail -n 500 "$sstore" > "$sstore.tmp.$$" && mv "$sstore.tmp.$$" "$sstore"; }
+                ) 9>"${CM_SMS_LOCK:-/tmp/carmodem-sms.lock}"
                 # submit-объект в MM больше не нужен (копия — в реестре):
                 # иначе они копятся до ребута и раздувают каждый полный get_sms
                 mmcli -m "$midx" --messaging-delete-sms="$sid" >/dev/null 2>&1

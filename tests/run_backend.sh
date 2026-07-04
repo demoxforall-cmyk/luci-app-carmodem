@@ -107,6 +107,42 @@ SIG=$(CM_SMS_SENT="$HERE/fixtures/mm/sent_sms.jsonl" cm_mm_sms_sig)
 check sms_sig "$SIG" '{"n":3,"max":5,"out":1}'
 
 echo
+echo "[лёгкий бейдж Connection: cm_mm_conn одним awk-проходом]"
+CONN=$(cm_mm_conn)
+check mm_conn "$CONN" '{"state":"connected","access_tech":"lte"}'
+
+echo "[реестр отправленных: удаление под flock + уникальный tmp, один проход]"
+DT="${TMPDIR:-/tmp}/cm_test_sent.jsonl"; DL="${TMPDIR:-/tmp}/cm_test_sent.lock"
+printf '%s\n%s\n' \
+  '{"id":"s111_1","number":"+79990000001","timestamp":"2026-07-04T10:00:00","text":"one","storage":"me","dir":"out"}' \
+  '{"id":"s222_2","number":"+79990000002","timestamp":"2026-07-04T10:01:00","text":"two","storage":"me","dir":"out"}' > "$DT"
+GEN() { printf '%s\n%s\n' \
+  '{"id":"s111_1","number":"+79990000001","timestamp":"2026-07-04T10:00:00","text":"one","storage":"me","dir":"out"}' \
+  '{"id":"s222_2","number":"+79990000002","timestamp":"2026-07-04T10:01:00","text":"two","storage":"me","dir":"out"}' > "$DT"; }
+DR=$(CM_SMS_SENT="$DT" CM_SMS_LOCK="$DL" cm_mm_sms_delete 's111_1')
+check del_json "$DR" '"deleted":1'
+LEFT=$(cat "$DT")
+check del_kept "$LEFT" '"id":"s222_2"'
+if printf '%s' "$LEFT" | grep -q '"id":"s111_1"'; then fail=$((fail+1)); echo "  FAIL del_removed"; else pass=$((pass+1)); echo "  ok   del_removed"; fi
+# крайний случай: удалить ВСЕ -> файл должен опустеть (grep -v rc=1 при пустом выводе)
+GEN
+DR2=$(CM_SMS_SENT="$DT" CM_SMS_LOCK="$DL" cm_mm_sms_delete 's111_1,s222_2')
+check del_all_json "$DR2" '"deleted":2'
+if [ -s "$DT" ]; then fail=$((fail+1)); echo "  FAIL del_all_empty (осталось: $(cat "$DT"))"; else pass=$((pass+1)); echo "  ok   del_all_empty"; fi
+# несуществующий id -> failed, файл цел
+GEN
+DR3=$(CM_SMS_SENT="$DT" CM_SMS_LOCK="$DL" cm_mm_sms_delete 's999_9')
+check del_missing_json "$DR3" '"deleted":0,"failed":1'
+check del_missing_kept "$(cat "$DT")" '"id":"s111_1"'
+rm -f "$DT" "$DL"
+
+echo "[AT: адаптивный шаг опроса (fancy sleep -> 0.1, иначе 1; кэш)]"
+CM_AT_STEP_CACHE="${TMPDIR:-/tmp}/cm_test_atstep"; rm -f "$CM_AT_STEP_CACHE"; unset CM_AT_STEP
+S=$(CM_AT_STEP_CACHE="$CM_AT_STEP_CACHE" cm_at_step)
+case "$S" in 0.1|1) pass=$((pass+1)); echo "  ok   at_step_valid ($S)" ;; *) fail=$((fail+1)); echo "  FAIL at_step_valid (got '$S')" ;; esac
+if [ -r "$CM_AT_STEP_CACHE" ]; then pass=$((pass+1)); echo "  ok   at_step_cached"; else fail=$((fail+1)); echo "  FAIL at_step_cached"; fi
+rm -f "$CM_AT_STEP_CACHE"; unset CM_AT_STEP
+
 echo "[динамический индекс модема + SIM-слот через AT]"
 # mock на -L отдаёт синтетический список с /Modem/1 -> резолв должен дать 1
 # (не совпадает с fallback-дефолтом 0 -> тест реально проверяет извлечение)

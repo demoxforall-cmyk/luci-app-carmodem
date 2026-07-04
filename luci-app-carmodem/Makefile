@@ -12,7 +12,7 @@ LUCI_TITLE:=LuCI app for RM520N modem (CarModem)
 LUCI_DEPENDS:=+luci-base
 LUCI_EXTRA_DEPENDS:=luci-proto-modemmanager (>=0), modemmanager (>=0)
 LUCI_PKGARCH:=all
-PKG_VERSION:=3.7
+PKG_VERSION:=3.8
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=CarModem project
 

@@ -34,6 +34,24 @@ cm_at() {
     cm_at_exchange "$1"
 }
 
+# Шаг опроса ответа AT. BusyBox с FEATURE_FANCY_SLEEP (на стоке ImmortalWRT 25.12
+# включён) понимает `sleep 0.1` -> обмен освобождает flock за ~0.1-0.3 c вместо
+# ≥1 c. Определяем ОДИН раз и кэшируем в /tmp (детект стоит ~100 мс — платим лишь
+# на первом AT-обмене после загрузки, не на каждом rpcd-вызове). Нет fancy sleep
+# -> `sleep 0.1` даст ошибку -> безопасный фолбэк 1 c (иначе цикл выродился бы в
+# busy-loop и убил cat до ответа модема). Значение из кэша валидируется.
+cm_at_step() {
+    [ -n "${CM_AT_STEP:-}" ] && { printf '%s' "$CM_AT_STEP"; return; }
+    f="${CM_AT_STEP_CACHE:-/tmp/cm_at_step}"
+    [ -r "$f" ] && CM_AT_STEP=$(cat "$f" 2>/dev/null)
+    case "${CM_AT_STEP:-}" in
+        0.1|1) ;;
+        *) if sleep 0.1 2>/dev/null; then CM_AT_STEP=0.1; else CM_AT_STEP=1; fi
+           echo "$CM_AT_STEP" > "$f" 2>/dev/null ;;
+    esac
+    printf '%s' "$CM_AT_STEP"
+}
+
 # --- Реальный транспорт (на устройстве) ----------------------------------
 # Одна AT-строка (можно с конкатенацией Quectel через `;`). cat-читатель +
 # запись команды + ожидание OK/ERROR. Сериализация — flock -x (BusyBox без -w),
@@ -43,6 +61,8 @@ cm_at() {
 cm_at_exchange() {
     port=$(cm_at_resolve_port) || { echo "ERROR: no AT port" >&2; return 2; }
     tmp="/tmp/carmodem-at.$$"
+    step=$(cm_at_step)
+    case "$step" in 0.1) iters=$((CM_AT_TIMEOUT * 10)) ;; *) iters=$CM_AT_TIMEOUT ;; esac
     (
         flock -x 9 || { echo "ERROR: at lock failed" >&2; exit 2; }
         : > "$tmp"
@@ -50,9 +70,9 @@ cm_at_exchange() {
         cpid=$!
         printf '%s\r' "$1" > "$port"
         i=0
-        while [ "$i" -lt "$CM_AT_TIMEOUT" ]; do
+        while [ "$i" -lt "$iters" ]; do
             grep -qE '^OK|ERROR' "$tmp" 2>/dev/null && break
-            sleep 1
+            sleep "$step"
             i=$((i + 1))
         done
         kill "$cpid" 2>/dev/null

@@ -177,7 +177,9 @@ cm_dial() {
 # (ModemManager / netifd / wwan / bearer). Фронтенд опрашивает в реальном времени.
 # jshn (json_add_string) корректно экранирует многострочный текст -> валидный JSON.
 cm_conn_log() {
-    log=$(logread 2>/dev/null | grep -iE 'modemmanager|netifd|wwan|bearer' | tail -n 120)
+    # -l ограничивает выборку последними N записями НА СТОРОНЕ logd -> не тянем и
+    # не грепаем весь кольцевой буфер syslog каждые 2 c (важно при большом log_size)
+    log=$(logread -l 500 2>/dev/null | grep -iE 'modemmanager|netifd|wwan|bearer' | tail -n 120)
     json_init
     json_add_string log "$log"
     json_dump
