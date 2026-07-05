@@ -7,5 +7,6 @@
   },
   "admin/modem/info":        { "title": "Status",   "order": 1, "action": { "type": "view", "path": "carmodem/info" } },
   "admin/modem/sms":         { "title": "Messages", "order": 2, "action": { "type": "view", "path": "carmodem/sms" } },
-  "admin/modem/control":     { "title": "Advanced", "order": 3, "action": { "type": "view", "path": "carmodem/control" } }
+  "admin/modem/control":     { "title": "Advanced", "order": 3, "action": { "type": "view", "path": "carmodem/control" } },
+  "admin/modem/watchdog":    { "title": "Watchdog", "order": 4, "action": { "type": "view", "path": "carmodem/watchdog" } }
 }

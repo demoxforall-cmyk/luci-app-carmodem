@@ -10,7 +10,7 @@
 // ресурсы по `?v=<версия_luci>`, которая между нашими сборками не меняется —
 // поэтому браузер не перечитывает обновлённый carmodem.css. Бампить вместе с
 // PKG_VERSION при изменении стилей/вьюх.
-var CM_VER = '3.9';
+var CM_VER = '4.0';
 
 var callGetStatus     = rpc.declare({ object: 'carmodem', method: 'get_status' });
 var callGetDashboard  = rpc.declare({ object: 'carmodem', method: 'get_dashboard' });
@@ -41,6 +41,10 @@ var callSetSim        = rpc.declare({ object: 'carmodem', method: 'set_sim',  pa
 var callSetTtl        = rpc.declare({ object: 'carmodem', method: 'set_ttl',  params: [ 'in', 'out' ] });
 var callDial          = rpc.declare({ object: 'carmodem', method: 'dial',     params: [ 'up' ] });
 var callResetModem    = rpc.declare({ object: 'carmodem', method: 'reset_modem' });
+var callGetWatchdog   = rpc.declare({ object: 'carmodem', method: 'get_watchdog' });
+var callSetWatchdog   = rpc.declare({ object: 'carmodem', method: 'set_watchdog', params: [ 'enabled', 'interval', 'ping_hosts', 'l1_reconnect', 'l2_reset', 'l3_reboot', 'cooldown_reset', 'allow_reboot', 'recovery_service', 'wan_netdev', 'wan_iface' ] });
+var callWatchdogTest  = rpc.declare({ object: 'carmodem', method: 'watchdog_test' });
+var callWatchdogClear = rpc.declare({ object: 'carmodem', method: 'watchdog_clear' });
 
 // Пороги: [зелёный, жёлто-зелёный, жёлтый/оранж]; ниже последнего -> красный.
 // Направление 'high' = больше лучше (по умолчанию для dBm/dB здесь).
@@ -116,7 +120,9 @@ return baseclass.extend({
 		sendSms: callSendSms,
 		setBand: callSetBand, setRat: callSetRat, setSim: callSetSim,
 		setTtl: callSetTtl, dial: callDial,
-		resetModem: callResetModem
+		resetModem: callResetModem,
+		getWatchdog: callGetWatchdog, setWatchdog: callSetWatchdog,
+		watchdogTest: callWatchdogTest, watchdogClear: callWatchdogClear
 	},
 
 	// Класс качества 'cm-q1'(отл)..'cm-q4'(плохо) по метрике и значению.

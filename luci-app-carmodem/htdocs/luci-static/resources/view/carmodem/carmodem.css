@@ -272,6 +272,32 @@
 /* устойчивость к таймаутам: устаревший дашборд затемняем + плашка «нет ответа» */
 .cm-stale { opacity: .5; transition: opacity .3s; }
 .cm-stale-note { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 6px 12px; border-radius: 8px; font-size: 13px; color: color-mix(in srgb, currentColor 75%, transparent); background: color-mix(in srgb, #BA7517 16%, transparent); border: 1px solid color-mix(in srgb, #BA7517 32%, transparent); }
+/* --- Watchdog (авто-восстановление связи) --- */
+.cm-mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+.cm-wd-toprow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 10px; }
+.cm-wd-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 3px 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, currentColor 20%, transparent); }
+.cm-wd-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+.cm-wd-b-ok   { color: #1e9e4a; background: color-mix(in srgb, #1e9e4a 14%, transparent); border-color: color-mix(in srgb, #1e9e4a 34%, transparent); }
+.cm-wd-b-warn { color: #e07a1f; background: color-mix(in srgb, #e07a1f 15%, transparent); border-color: color-mix(in srgb, #e07a1f 34%, transparent); }
+.cm-wd-b-mut  { color: var(--cm-muted); background: color-mix(in srgb, currentColor 10%, transparent); }
+.cm-wd-b-off  { color: var(--cm-muted); background: color-mix(in srgb, currentColor 8%, transparent); }
+.cm-wd-marker { margin-left: auto; font-size: 12px; font-family: ui-monospace, monospace; color: var(--cm-muted); }
+.cm-wd-note2 { font-size: 12.5px; color: var(--cm-muted); margin: 0 0 12px; }
+.cm-wd-ladder { display: flex; flex-direction: column; gap: 8px; }
+.cm-wd-rung { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 9px; border: 1px solid color-mix(in srgb, currentColor 12%, transparent); background: color-mix(in srgb, currentColor 3%, transparent); transition: background .25s, border-color .25s; }
+.cm-wd-rung-l { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.cm-wd-rung-b { flex: 1; min-width: 0; }
+.cm-wd-rung-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+.cm-wd-rung-desc { font-size: 12px; color: var(--cm-muted); margin-top: 2px; }
+.cm-wd-rung-th { display: flex; flex-direction: column; align-items: flex-end; flex: 0 0 auto; }
+.cm-wd-rung.cm-wd-reached { border-color: color-mix(in srgb, #378add 45%, transparent); background: color-mix(in srgb, #378add 12%, transparent); }
+.cm-wd-rung.cm-wd-reached .cm-chip-led { background: #378add; box-shadow: 0 0 6px color-mix(in srgb, #378add 70%, transparent); }
+.cm-wd-rung.cm-wd-muted { opacity: .5; }
+.cm-wd-danger { color: #e53935 !important; background: color-mix(in srgb, #e53935 15%, transparent) !important; }
+.cm-wd-danger-note { border-color: color-mix(in srgb, #e53935 30%, transparent) !important; background: color-mix(in srgb, #e53935 8%, transparent) !important; }
+.cm-wd-liverow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid color-mix(in srgb, currentColor 7%, transparent); }
+.cm-wd-log-ok { color: #57c08a; }
+.cm-wd-log-act { color: #e0a848; }
 .cm-send-btn { width: 36px; height: 36px; flex: 0 0 auto; border: none; border-radius: 50%; background: color-mix(in srgb, #378add 24%, transparent); color: #4a90d9; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .cm-send-btn:hover { background: color-mix(in srgb, #378add 36%, transparent); }
 .cm-th-foot { padding: 10px 12px; border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }

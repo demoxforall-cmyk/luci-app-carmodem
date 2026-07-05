@@ -1,0 +1,24 @@
+#!/bin/sh /etc/rc.common
+# CarModem — procd-сервис watchdog авто-восстановления связи модема.
+# SPDX-License-Identifier: GPL-2.0
+#
+# Запускается только при carmodem.watchdog.enabled=1. Петля (watchdog.sh loop)
+# каждый interval секунд делает один цикл проверки/эскалации. respawn на случай
+# падения. UI (set_watchdog) сам делает enable/restart | stop/disable.
+
+START=96
+STOP=09
+USE_PROCD=1
+
+CM_SHARE=/usr/share/carmodem
+
+start_service() {
+    [ "$(uci -q get carmodem.watchdog.enabled 2>/dev/null)" = "1" ] || return 0
+    [ -r "$CM_SHARE/watchdog.sh" ] || return 0
+    procd_open_instance
+    procd_set_param command /bin/sh "$CM_SHARE/watchdog.sh" loop
+    procd_set_param respawn 3600 5 0
+    procd_set_param stdout 0
+    procd_set_param stderr 0
+    procd_close_instance
+}

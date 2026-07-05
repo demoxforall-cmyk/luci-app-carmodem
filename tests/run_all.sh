@@ -14,6 +14,8 @@ sh "$HERE/run_backend.sh" || rc=1
 echo
 sh "$HERE/run_control.sh" || rc=1
 echo
+sh "$HERE/run_watchdog.sh" || rc=1
+echo
 sh "$HERE/check_package.sh" || rc=1
 echo
 echo "============================================"

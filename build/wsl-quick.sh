@@ -17,7 +17,8 @@ echo "[1/3] Обновляю пакет из репозитория + биты +
 rm -rf "$SDK/package/luci-app-carmodem"
 cp -r "$REPO_WIN/luci-app-carmodem" "$SDK/package/luci-app-carmodem"
 chmod 0755 "$SDK/package/luci-app-carmodem/root/usr/libexec/rpcd/carmodem" \
-           "$SDK/package/luci-app-carmodem/root/etc/init.d/carmodem"
+           "$SDK/package/luci-app-carmodem/root/etc/init.d/carmodem" \
+           "$SDK/package/luci-app-carmodem/root/etc/init.d/carmodem-watchdog"
 # Вшиваем русский перевод ПРЯМО в основной пакет (один apk): компилим .po -> .lmo
 # в root/ (luci.mk копирует root/* в пакет). po/ намеренно НЕТ -> отдельный
 # luci-i18n-carmodem-ru не создаётся.

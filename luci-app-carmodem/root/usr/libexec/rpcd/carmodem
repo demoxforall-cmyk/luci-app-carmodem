@@ -10,6 +10,7 @@ CM_SHARE="${CM_SHARE:-/usr/share/carmodem}"
 . "$CM_SHARE/telemetry.sh"
 . "$CM_SHARE/mm.sh"
 . "$CM_SHARE/control.sh"
+. "$CM_SHARE/watchdog.sh"
 
 case "$1" in
   list)
@@ -20,7 +21,9 @@ case "$1" in
   "set_sim":{"slot":0}, "set_ttl":{"in":0,"out":0}, "dial":{"up":true},
   "send_at":{"cmd":""}, "send_ussd":{"code":""}, "ussd_respond":{"response":""}, "ussd_cancel":{},
   "send_sms":{"to":"","text":""}, "delete_sms":{"ids":""},
-  "set_sms_storage":{"storage":""}, "reset_modem":{} }
+  "set_sms_storage":{"storage":""}, "reset_modem":{},
+  "get_watchdog":{}, "watchdog_test":{}, "watchdog_clear":{},
+  "set_watchdog":{"enabled":0,"interval":0,"ping_hosts":"","l1_reconnect":0,"l2_reset":0,"l3_reboot":0,"cooldown_reset":0,"allow_reboot":0,"recovery_service":"","wan_netdev":"","wan_iface":""} }
 JSON
     ;;
   call)
@@ -148,6 +151,22 @@ JSON
       delete_sms) read -r input; json_load "$input"; json_get_var ids ids; cm_mm_sms_delete "$ids" ;;
       set_sms_storage) read -r input; json_load "$input"; json_get_var storage storage; cm_sms_storage_set "$storage" ;;
       reset_modem) cm_reset_modem ;;
+      get_watchdog)
+        # конфиг + последний снимок состояния + хвост лога (читает /tmp, не опрашивает)
+        cm_wd_status_json ;;
+      set_watchdog)
+        read -r input; json_load "$input"
+        json_get_var WDS_ENABLED enabled; json_get_var WDS_INTERVAL interval
+        json_get_var WDS_PING ping_hosts; json_get_var WDS_L1 l1_reconnect
+        json_get_var WDS_L2 l2_reset;     json_get_var WDS_L3 l3_reboot
+        json_get_var WDS_CDR cooldown_reset; json_get_var WDS_ALLOWREB allow_reboot
+        json_get_var WDS_RECSVC recovery_service; json_get_var WDS_WANDEV wan_netdev
+        json_get_var WDS_IFACE wan_iface
+        cm_wd_set ;;
+      watchdog_test)
+        # безопасный снимок состояния СЕЙЧАС (без действий/инкремента strike)
+        cm_wd_probe >/dev/null 2>&1; cm_wd_status_json ;;
+      watchdog_clear) cm_wd_clear ;;
       *) echo '{"error":"not_implemented"}' ;;
     esac
     ;;

@@ -105,11 +105,17 @@ msgstr "Расширенные настройки"
 msgid "All"
 msgstr "Все"
 
+msgid "Allow router reboot (L3)"
+msgstr "Разрешить ребут роутера (L3)"
+
 msgid "Apply RAT"
 msgstr "Применить RAT"
 
 msgid "Auto (all)"
 msgstr "Авто (все)"
+
+msgid "Auto-recovery"
+msgstr "Автовосстановление"
 
 msgid "Band"
 msgstr "Диапазон"
@@ -126,6 +132,12 @@ msgstr "Сота на карте"
 msgid "Cell parameters"
 msgstr "Параметры соты"
 
+msgid "Check done"
+msgstr "Проверка выполнена"
+
+msgid "Check interval (s)"
+msgstr "Интервал проверки (с)"
+
 msgid "Combined"
 msgstr "Совмещённое"
 
@@ -140,6 +152,9 @@ msgstr "Соединение"
 
 msgid "Copy to clipboard"
 msgstr "Копировать в буфер"
+
+msgid "Counter reset"
+msgstr "Счётчик сброшен"
 
 msgid "Delete"
 msgstr "Удалить"
@@ -159,6 +174,9 @@ msgstr "Журнал дозвона"
 msgid "Disable all"
 msgstr "Снять все"
 
+msgid "Disabled"
+msgstr "Выключен"
+
 msgid "Disconnect"
 msgstr "Отключить"
 
@@ -171,14 +189,29 @@ msgstr "EARFCN — номер частотного канала E-UTRA (несу
 msgid "Enable all"
 msgstr "Выбрать все"
 
+msgid "Episode"
+msgstr "Эпизод"
+
 msgid "Error"
 msgstr "Ошибка"
+
+msgid "Escalating"
+msgstr "Эскалация"
+
+msgid "Escalation rules"
+msgstr "Правила эскалации"
+
+msgid "Event log"
+msgstr "Журнал событий"
 
 msgid "Failed"
 msgstr "Не удалось"
 
 msgid "Firmware"
 msgstr "Прошивка"
+
+msgid "Full router reboot — only when the modem is connected (bearer up) but has no data, once per episode."
+msgstr "Полный ребут роутера — только когда модем подключён (bearer поднят), но данных нет; 1 раз за эпизод."
 
 msgid "Gateway"
 msgstr "Шлюз"
@@ -189,8 +222,35 @@ msgstr "Глобальный Cell ID"
 msgid "Hardware revision"
 msgstr "Ревизия оборудования"
 
+msgid "Internet"
+msgstr "Интернет"
+
+msgid "L1 threshold (cycles)"
+msgstr "Порог L1 (циклы)"
+
+msgid "L1 · Reconnect interface"
+msgstr "L1 · Реконнект интерфейса"
+
+msgid "L2 threshold (cycles)"
+msgstr "Порог L2 (циклы)"
+
+msgid "L2 · Reset modem"
+msgstr "L2 · Reset модема"
+
+msgid "L3 reboots the whole router. Kept safe: only when connected (bearer up) but no data, and once per episode."
+msgstr "L3 перезагружает весь роутер. Защита: только когда модем подключён (bearer поднят), но данных нет, и 1 раз за эпизод."
+
+msgid "L3 threshold (cycles)"
+msgstr "Порог L3 (циклы)"
+
+msgid "L3 · Reboot router"
+msgstr "L3 · Перезагрузка роутера"
+
 msgid "LTE band-lock"
 msgstr "LTE: блокировка диапазонов"
+
+msgid "Live state"
+msgstr "Живое состояние"
 
 msgid "Message"
 msgstr "Сообщение"
@@ -203,6 +263,9 @@ msgstr "Модель"
 
 msgid "Modem"
 msgstr "Модем"
+
+msgid "Modem watchdog"
+msgstr "Сторож модема"
 
 msgid "Name"
 msgstr "Название"
@@ -225,8 +288,20 @@ msgstr "Нет переписок"
 msgid "No response from the router — showing last known data"
 msgstr "Нет ответа от роутера — показаны последние данные"
 
+msgid "No signal — idle"
+msgstr "Нет сигнала — бездействие"
+
+msgid "Off"
+msgstr "Выкл"
+
+msgid "On"
+msgstr "Вкл"
+
 msgid "Operator scan"
 msgstr "Поиск операторов"
+
+msgid "Optional: init.d service restarted once when internet returns — e.g. “podkop”, which otherwise starts blind with no network."
+msgstr "Опционально: init.d-сервис перезапускается 1 раз при возврате интернета — напр. «podkop», который иначе стартует вслепую без сети."
 
 msgid "PCI — Physical Cell ID, the physical cell identifier (0–503). Helps tell neighbouring sectors apart."
 msgstr "PCI — Physical Cell ID, физический идентификатор соты (0–503). Помогает различать соседние секторы."
@@ -239,6 +314,9 @@ msgstr "По-антенные измерения: значения RSRP/RSRQ/SIN
 
 msgid "Phone number"
 msgstr "Номер телефона"
+
+msgid "Ping hosts"
+msgstr "Хосты для ping"
 
 msgid "RAT mode"
 msgstr "Режим RAT"
@@ -267,11 +345,23 @@ msgstr "Ответить в меню"
 msgid "Request failed"
 msgstr "Запрос не удался"
 
+msgid "Reset cooldown (s)"
+msgstr "Пауза между reset (с)"
+
+msgid "Reset counter"
+msgstr "Сбросить счётчик"
+
 msgid "Reset modem"
 msgstr "Сброс модема"
 
 msgid "Reset the modem? This drops the connection."
 msgstr "Сбросить модем? Соединение прервётся."
+
+msgid "Restart service after recovery"
+msgstr "Перезапустить сервис после восстановления"
+
+msgid "Run check now"
+msgstr "Проверить сейчас"
 
 msgid "SIM & TTL"
 msgstr "SIM и TTL"
@@ -282,11 +372,23 @@ msgstr "Слот SIM"
 msgid "SINR — Signal to Interference plus Noise Ratio. Ratio of useful signal to interference and noise. Determines speed and stability. Excellent ≥ 20, poor < 0 dB."
 msgstr "SINR — Signal to Interference plus Noise Ratio. Отношение полезного сигнала к помехам и шуму. Определяет скорость и стабильность. Отлично ≥ 20, плохо < 0 dB."
 
+msgid "Safety rule: with no signal / not registered (covered parking) the watchdog does nothing — it never reconnects or reboots blindly."
+msgstr "Правило безопасности: при отсутствии сигнала / без регистрации (крытая парковка) сторож бездействует — не реконнектит и не перезагружает вслепую."
+
 msgid "Save & apply"
 msgstr "Сохранить и применить"
 
 msgid "Save & apply band-lock? Connection may drop briefly."
 msgstr "Сохранить и применить блокировку диапазонов? Соединение может ненадолго прерваться."
+
+msgid "Save failed"
+msgstr "Не удалось сохранить"
+
+msgid "Save settings"
+msgstr "Сохранить настройки"
+
+msgid "Saved"
+msgstr "Сохранено"
 
 msgid "Scan networks"
 msgstr "Искать сети"
@@ -324,6 +426,9 @@ msgstr "Время сессии"
 msgid "Set"
 msgstr "Задать"
 
+msgid "Settings"
+msgstr "Настройки"
+
 msgid "Signal"
 msgstr "Сигнал"
 
@@ -338,6 +443,9 @@ msgstr "Сила сигнала — обобщённая оценка качес
 
 msgid "Status"
 msgstr "Статус"
+
+msgid "Strike"
+msgstr "Счётчик"
 
 msgid "TTL in / out"
 msgstr "TTL вход / выход"
@@ -369,17 +477,53 @@ msgstr "Трафик ↓ / ↑"
 msgid "Type"
 msgstr "Тип"
 
+msgid "WAN interface (for L1 dial)"
+msgstr "WAN-интерфейс (для L1 dial)"
+
+msgid "WAN netdev override"
+msgstr "WAN-netdev (override)"
+
+msgid "Watchdog"
+msgstr "Сторож"
+
+msgid "Watching"
+msgstr "Наблюдает"
+
+msgid "While registered but with no internet, the strike counter grows every cycle. One action per cycle, checked top-down; the counter resets only when internet returns."
+msgstr "Пока модем зарегистрирован, но интернета нет, счётчик strike растёт каждый цикл. Одно действие за цикл, проверка сверху вниз; счётчик сбрасывается только при возврате интернета."
+
 msgid "Yesterday"
 msgstr "Вчера"
+
+msgid "all levels reached"
+msgstr "все уровни пройдены"
+
+msgid "blank = auto"
+msgstr "пусто = авто"
+
+msgid "clean"
+msgstr "чисто"
+
+msgid "cooldown"
+msgstr "пауза"
 
 msgid "current"
 msgstr "текущая"
 
+msgid "cycles left"
+msgstr "циклов осталось"
+
 msgid "disconnected"
 msgstr "отключено"
 
+msgid "down"
+msgstr "нет"
+
 msgid "eNB / Sector"
 msgstr "eNB / Сектор"
+
+msgid "ifdown/ifup of the WAN interface — the softest fix."
+msgstr "ifdown/ifup WAN-интерфейса — самое мягкое действие."
 
 msgid "in"
 msgstr "вход"
@@ -389,6 +533,12 @@ msgstr "онлайн"
 
 msgid "messages"
 msgstr "сообщений"
+
+msgid "mmcli --reset (coordinated with ModemManager, not a raw AT command)."
+msgstr "mmcli --reset (координированно с ModemManager, не сырой AT)."
+
+msgid "modem reset"
+msgstr "reset модема"
 
 msgid "no data"
 msgstr "нет данных"
@@ -408,6 +558,18 @@ msgstr "выход"
 msgid "press scan"
 msgstr "нажмите «Искать»"
 
+msgid "reboot"
+msgstr "ребут"
+
+msgid "rebooted this episode"
+msgstr "был ребут в эпизоде"
+
+msgid "reconnect"
+msgstr "реконнект"
+
+msgid "router reboot"
+msgstr "ребут роутера"
+
 msgid "scanning…"
 msgstr "идёт поиск…"
 
@@ -420,8 +582,14 @@ msgstr "сессия активна"
 msgid "timeout"
 msgstr "таймаут"
 
+msgid "up"
+msgstr "есть"
+
 msgid "— modem console — pick a command above or type your own —"
 msgstr "— консоль модема — выберите команду сверху или введите свою —"
+
+msgid "— no events yet —"
+msgstr "— событий пока нет —"
 
 msgid "— pick a command —"
 msgstr "— выберите команду —"
